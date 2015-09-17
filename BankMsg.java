@@ -1,32 +1,58 @@
+/* TODO
+ * 
+ * Could possibly use (-) to withdraw and (+) to deposit
+ */
+
 // Protocol
 public class BankMsg 
 {
 	private boolean isResponse; // true if response from server
+	private boolean isAuthentication; // true if loggin in, false if transaction
 	private boolean isDeposit; // true if deposit; false if withdrawl
 	private String username; // length restriction
 	private String password; // length restriction
 	private Double balance;
+	private Double transactionAmount;
 
 	public static final int MAX_USERNAME_LENGTH = 12; 
 	public static final int MAX_PASSWORD_LENGTH = 12;
 
-	public BankMsg(boolean isResponse, boolean isDeposit, String username, String password, Double balance) throws IllegalArgumentException {
+	public BankMsg(boolean isResponse, boolean isAuthentication, boolean isDeposit, String username, String password, Double balance, Double transactionAmount) throws IllegalArgumentException {
+		
 		// Check invariants
+		if (isAuthentication && transactionAmount > 0) {
+			throw new IllegalArgumentException("Transaction amount must be 0 to log in: " + transactionAmount);
+		}
+		if (isAuthentication && (username.length() == 0 || password.length() == 0)) {
+			throw new IllegalArgumentException("Invalid Login Attempt: " + username);
+		}
 		if (username.length() == 0 || username.length() > MAX_USERNAME_LENGTH) {
 			throw new IllegalArgumentException("Bad Username: " + username);
 		}
 		if (password.length() == 0 || password.length() > MAX_PASSWORD_LENGTH) {
 			throw new IllegalArgumentException("Bad Password: " + password);			
 		}
+		if (transactionAmount < 0) {
+			throw new IllegalArgumentException("Invalid Transaction Amount: " + transactionAmount);			
+		}
+		if (!isDeposit && transactionAmount > balance) {
+			throw new IllegalArgumentException("Insufficient funds. Invalid Transaction Amount: " + transactionAmount);			
+		}
 		this.isResponse = isResponse;
+		this.isAuthentication = isAuthentication;
 		this.isDeposit = isDeposit;
 		this.username = username;
 		this.password = password;
 		this.balance = balance;
+		this.transactionAmount = transactionAmount;
 	}
 
 	public void setDeposit(boolean isDeposit) {
 	    this.isDeposit = isDeposit;
+	}
+
+	public void setIsAuthentication(boolean isAuthentication) {
+	    this.isAuthentication = isAuthentication;
 	}
 
 	public void setResponse(boolean isResponse) {
@@ -35,6 +61,10 @@ public class BankMsg
 
 	public boolean isDeposit() {
 	    return this.isDeposit;
+	}
+
+	public boolean isAuthentication() {
+	    return this.isAuthentication;
 	}
 
 	public boolean isResponse() {
@@ -71,8 +101,22 @@ public class BankMsg
 	    return this.balance;
 	}
 
+	public void setTransactionAmount(Double transactionAmount) {
+		if (transactionAmount < 0) {
+			throw new IllegalArgumentException("Invalid Transaction Amount: " + transactionAmount);			
+		}
+		if (!isDeposit && transactionAmount > balance) {
+			throw new IllegalArgumentException("Insufficient funds. Invalid Transaction Amount: " + transactionAmount);			
+		}
+	    this.transactionAmount = transactionAmount;
+	}
+
+	public Double getTransactionAmount() {
+	    return this.transactionAmount;
+	}
+
 	public String toString() {
-		String res = (isDeposit ? "deposit" : "withdrawl") + " for account " + username;
+		String res = (isDeposit ? "deposit" : "withdraw") + transactionAmount + " for account " + username;
 		if (isResponse) {
 			res = "response to " + res + " who now has " + balance + " dollar(s)";
 		}
