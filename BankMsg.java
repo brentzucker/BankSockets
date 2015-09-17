@@ -24,4 +24,58 @@ public class BankMsg
 		this.password = password;
 		this.balance = balance;
 	}
+
+	public void setDeposit(boolean isDeposit) {
+	    this.isDeposit = isDeposit;
+	}
+
+	public void setResponse(boolean isResponse) {
+	    this.isResponse = isResponse;
+	}	
+
+	public boolean isDeposit() {
+	    return this.isDeposit;
+	}
+
+	public boolean isResponse() {
+	    return this.isResponse;
+	}
+
+	public void setUsername(String username) {
+		if (username.length() == 0 || username.length() > MAX_USERNAME_LENGTH) {
+			throw new IllegalArgumentException("Bad Username: " + username);
+		}
+	    this.username = username;
+	}
+
+	public String getUsername() {
+	    return this.username;
+	}
+
+	public void setPassword(String password) {
+		if (password.length() == 0 || password.length() > MAX_PASSWORD_LENGTH) {
+			throw new IllegalArgumentException("Bad Password: " + password);			
+		}
+	    this.password = password;
+	}
+
+	public String getPassword() {
+	    return this.password;
+	}
+
+	public void setBalance(Double balance) {
+	    this.balance = balance;
+	}
+
+	public Double getBalance() {
+	    return this.balance;
+	}
+
+	public String toString() {
+		String res = (isDeposit ? "deposit" : "withdrawl") + " for account " + username;
+		if (isResponse) {
+			res = "response to " + res + " who now has " + balance + " dollar(s)";
+		}
+		return res;
+	}
 }
