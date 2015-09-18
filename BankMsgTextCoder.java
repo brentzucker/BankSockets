@@ -36,8 +36,67 @@ public class BankMsgTextCoder implements BankMsgCoder {
   		return data;
   	}
 
-  	// public BankMsg fromWire(byte[] message) throws IOException {
+  	public BankMsg fromWire(byte[] message) throws IOException {
+  		ByteArrayInputStream msgStream = new ByteArrayInputStream(message);
+  		Scanner scan = new Scanner(new InputStreamReader(msgStream, CHARSETNAME));
 
-  	// 	return new BankMsg(isResponse, isAuthentication, isDeposit, username, password, balance, transactionAmount);
-  	// }
+  		// BankMsg Properties
+  		boolean isResponse, isAuthentication = false, isDeposit = false;
+  		String username, password = "";
+  		Double balance, transactionAmount = 0.0;
+
+  		String token;
+
+  		try {
+  			token = scan.next();
+  			if (!token.equals(MAGIC)) {
+  				throw new IOException("Bad magic string: " + token);
+  			}
+  			
+  			token = scan.next();
+  			if (token.equals(AUTHSTR)) {
+  				isAuthentication = true;
+  			} else {
+  				// Last conditional is unecessary 
+  				if (!token.equals(DEPOSITSTR) && !token.equals(WITHDRAWSTR)) {
+  					throw new IOException("Bad deposit/withdraw indicator: " + token);
+  				} else if (token.equals(DEPOSITSTR)) {
+	  				isDeposit = true;
+	  			} else if (token.equals(WITHDRAWSTR)) {
+	  				isDeposit = false;
+	  			}
+  			}
+
+  			token = scan.next();
+  			if (token.equals(RESPONSESTR)) {
+  				isResponse = true;
+  				token = scan.next();
+  			} else {
+  				isResponse = false;
+  			}
+
+  			// Current token is username
+  			username = token;
+  			token = scan.next();
+
+  			// If auth check password
+  			if (isAuthentication) {
+  				password = token;
+  				token = scan.next();
+  			}
+
+  			// If response store balance if correct
+  			// Right now I'm just going to store balance either way
+  			balance = Double.parseDouble(token);
+
+  			// If not response and balance will be correct after transaction, commit transaction
+  			if (!isAuthentication) {
+  				transactionAmount = Double.parseDouble(token);
+  			}
+  		} catch (IOException ioe) {
+  			throw new IOException("Parse error...");
+  		}
+
+  		return new BankMsg(isResponse, isAuthentication, isDeposit, username, password, balance, transactionAmount);
+  	}
 }

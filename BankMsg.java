@@ -26,10 +26,10 @@ public class BankMsg
 		if (isAuthentication && (username.length() == 0 || password.length() == 0)) {
 			throw new IllegalArgumentException("Invalid Login Attempt: " + username);
 		}
-		if (username.length() == 0 || username.length() > MAX_USERNAME_LENGTH) {
+		if (username.length() > MAX_USERNAME_LENGTH) {
 			throw new IllegalArgumentException("Bad Username: " + username);
 		}
-		if (password.length() == 0 || password.length() > MAX_PASSWORD_LENGTH) {
+		if (password.length() > MAX_PASSWORD_LENGTH) {
 			throw new IllegalArgumentException("Bad Password: " + password);			
 		}
 		if (transactionAmount < 0) {
