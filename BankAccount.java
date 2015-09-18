@@ -6,7 +6,7 @@ public class BankAccount {
 
 	// Transaction counter?
 	
-	public BankAccount(String username, String password, String balance) {
+	public BankAccount(String username, String password, Double balance) {
 		this.username = username;
 		this.password = password;
 		this.balance = balance;
