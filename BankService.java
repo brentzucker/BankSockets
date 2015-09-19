@@ -54,7 +54,7 @@ public class BankService {
 				} else { // Withdraw
 
 					// If msg has valid transaction amount, update the transaction & balance
-					if (msg.getTransactionAmout() >= 0) {
+					if (msg.getTransactionAmount() >= 0) {
 
 						transactionAmount = msg.getTransactionAmount();
 						balance = bankAccount.getBalance() - msg.getTransactionAmount();
