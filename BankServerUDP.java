@@ -20,6 +20,9 @@ public class BankServerUDP {
 		BankMsgCoder coder = new BankMsgTextCoder();
 		BankService service = new BankService();
 
+		// Load Bank Accounts fromt text file
+		service.loadBankAccounts();
+
 		while (true) {
 			DatagramPacket packet = new DatagramPacket(inBuffer, inBuffer.length);
 			sock.receive(packet);

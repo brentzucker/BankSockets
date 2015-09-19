@@ -1,10 +1,32 @@
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
+import java.io.File;
+import java.io.FileNotFoundException;
 
 public class BankService {
 
 	// Map of usernames to BankAccounts
 	private Map<String, BankAccount> bankAccounts = new HashMap<String, BankAccount>();
+
+	// Load Bank Accounts
+	public void loadBankAccounts() throws FileNotFoundException {
+		String username, password,
+			   fileName = "bankAccounts.txt";
+		Double balance = 0.0;
+		Scanner scan = new Scanner(new File(fileName));
+
+		System.out.printf("%12s %12s\n", "", "Bank Accounts");
+		System.out.printf("%-12s %-12s %-25s\n", "username", "password", "balance");
+		while (scan.hasNext()) {
+			username = scan.next();
+			password = scan.next();
+			balance = scan.nextDouble();
+			bankAccounts.put(username, new BankAccount(username, password, balance));
+			System.out.printf("%-12s %-12s %-25s\n", username, password, balance);		
+		}
+		scan.close();
+	}
 
 	public BankMsg handleRequest(BankMsg msg) {
 
@@ -71,7 +93,7 @@ public class BankService {
 			}
 
 		} else {
-			
+
 			// Username does not exist, return balance of -1
 			msg.setBalance(balance);
 		}
