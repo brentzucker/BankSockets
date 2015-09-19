@@ -13,7 +13,7 @@ public class BankServerUDP {
 
 		int port = Integer.parseInt(args[0]);
 
-		Datagram sock = new DatagramSocket(port);
+		DatagramSocket sock = new DatagramSocket(port);
 
 		byte[] inBuffer = new byte[BankMsgTextCoder.MAX_WIRE_LENGTH];
 		// Change Bin to Text for a different coding approach
@@ -25,7 +25,7 @@ public class BankServerUDP {
 			sock.receive(packet);
 			byte[] encodedMsg = Arrays.copyOfRange(packet.getData(), 0, packet.getLength());
 			System.out.println("Handling request from " + packet.getSocketAddress() + " ("
-														+ econdedMsg.length + " bytes)");
+														+ encodedMsg.length + " bytes)");
 		
 			try {
 				// Receive
