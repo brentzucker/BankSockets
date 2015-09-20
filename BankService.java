@@ -30,6 +30,8 @@ public class BankService {
 
 	public BankMsg handleRequest(BankMsg msg) {
 
+		Debugger.log("BankService.java: handleRequest() msg: " + msg);
+
 		BankAccount bankAccount;
 
 		String username = msg.getUsername(),
@@ -47,6 +49,8 @@ public class BankService {
 
 		// Check if User exists
 		if ((bankAccount = bankAccounts.get(username)) != null) {
+
+			Debugger.log("BankService.java: msg.Authentication()" + msg.isAuthentication());
 
 			// If Authentication Check password and send back balance
 			if (msg.isAuthentication()) {
@@ -66,7 +70,7 @@ public class BankService {
 				}
 				
 			} else {
-				
+
 				// Not authentication, depositing or withdrawing
 				if (msg.isDeposit()) {
 

@@ -57,6 +57,9 @@ public class BankClientUDP {
 	    msg = coder.fromWire(encodedAuth);
 	    System.out.println(msg);
 
+	    // Extract balance from msg
+	    Double balance = msg.getBalance();
+
 	    Debugger.log("BankClientUDP.java");
 	    Debugger.log("msg.isAuthenticated(): " + msg.isAuthenticated());
 
@@ -64,6 +67,7 @@ public class BankClientUDP {
 	    String raw_input = "", input[];
 	    while (msg.isAuthenticated() && !raw_input.equals("exit")) {
 
+	    	System.out.println("Balance: " + balance);
 	    	raw_input = scan.nextLine();
 	    	input = raw_input.split(" ");
 
@@ -72,10 +76,38 @@ public class BankClientUDP {
 		    		System.out.println("<deposit/withdraw> <transaction-amount>");
 		    	} else {
 		    		String transaction = input[0];
-		    		Double amount = Double.parseDouble(input[1]);
+		    		Double transactionAmount = Double.parseDouble(input[1]);
 
-		    		System.out.println(transaction);
-		    		System.out.println(amount);
+		    		boolean isResponse = false,
+		    				isAuthentication = false,
+		    				isAuthenticated = true,
+		    				isDeposit = transaction.equals("deposit");
+
+		    		// Create transaction message
+		    		// BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, String username, String password, Double balance, Double transactionAmount)
+	    			msg = new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, username, password, balance, transactionAmount);
+		    	
+	    			// Change text to Bin and send request
+	    			encodedAuth = coder.toWire(msg);
+	    			System.out.println("Sending Text-Encoded Request (" + encodedAuth.length
+	    													+ " bytes): ");
+		    		System.out.println(encodedAuth);
+	    			message = new DatagramPacket(encodedAuth, encodedAuth.length);
+	    			sock.send(message);
+
+	    			// Receive response
+				    message = new DatagramPacket(new byte[BankMsgTextCoder.MAX_WIRE_LENGTH],
+				    							 BankMsgTextCoder.MAX_WIRE_LENGTH);
+				    sock.receive(message);
+				    encodedAuth = Arrays.copyOfRange(message.getData(), 0, message.getLength());
+
+				    System.out.println("Received Text-Encoded Response (" + encodedAuth.length
+				    													  + " bytes): ");
+				    msg = coder.fromWire(encodedAuth);
+				    System.out.println(msg);
+
+				    // Extract balance from msg
+				    balance = msg.getBalance();
 		    	}	    		
 	    	}
 	    }

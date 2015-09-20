@@ -102,18 +102,20 @@ public class BankMsgTextCoder implements BankMsgCoder {
   			// If response store balance if correct
   			// Right now I'm just going to store balance either way
   			balance = Double.parseDouble(token);
+  			Debugger.log("BankMsgTextCoder: fromWire() balance: " + balance);
 
   			// If not response and balance will be correct after transaction, commit transaction
   			if (isAuthenticated && !isAuthentication) {
+  				token = scan.next();
   				transactionAmount = Double.parseDouble(token);
+  				Debugger.log("BankMsgTextCoder: fromWire() transactionAmount: " + transactionAmount);
   			}
   		} catch (IOException ioe) {
   			throw new IOException("Parse error...");
   		}
 
   		// Debug Messages
-  		Debugger.log("BankMsgTextCoder.java:");
-  		Debugger.log("return new BankMsg(isResponse " 
+  		Debugger.log("BankMsgTextCoder: return new BankMsg(isResponse " 
   			+ isResponse + ", isAuthentication " + isAuthentication + ", isAuthenticated " + isAuthenticated + ", isDeposit " + isDeposit
   			+ ", username " + username + ", password " + password + ", balance " + balance + ", transactionAmount " + transactionAmount + ")");
   		

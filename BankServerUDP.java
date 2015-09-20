@@ -13,6 +13,9 @@ public class BankServerUDP {
 
 		int port = Integer.parseInt(args[0]);
 
+		// Consume -d for debugger
+	    Debugger.setEnabled(true);
+
 		DatagramSocket sock = new DatagramSocket(port);
 
 		byte[] inBuffer = new byte[BankMsgTextCoder.MAX_WIRE_LENGTH];
@@ -36,6 +39,8 @@ public class BankServerUDP {
 
 				// Make transaction/authentication
 				msg = service.handleRequest(msg);
+
+				Debugger.log("BankServerUDP: msg = service.handleRequest(msg) msg: " + msg);
 
 				// Put data in packet
 				packet.setData(coder.toWire(msg));
