@@ -49,11 +49,20 @@ public class BankService {
 		if ((bankAccount = bankAccounts.get(username)) != null) {
 
 			// If Authentication Check password and send back balance
-			if (msg.isAuthentication() && msg.getPassword() == bankAccount.getPassword()) {
+			if (msg.isAuthentication()) {
 				
-				// User is authenticated, return balance
-				balance = bankAccount.getBalance();
-				msg.setBalance(balance);
+				System.out.println("Checking Authentication for: " + msg.getUsername());
+
+				if (msg.getPassword().equals(bankAccount.getPassword())) {
+					
+					System.out.println("Authenticated");
+					// User is authenticated, return balance
+					balance = bankAccount.getBalance();
+					msg.setBalance(balance);
+				} else {
+					msg.setBalance(balance);
+				}
+				
 			} else {
 				
 				// Not authentication, depositing or withdrawing
@@ -95,6 +104,7 @@ public class BankService {
 		} else {
 
 			// Username does not exist, return balance of -1
+			System.out.println("Checking Authentication for: " + msg.getUsername());
 			msg.setBalance(balance);
 		}
 		return msg;
