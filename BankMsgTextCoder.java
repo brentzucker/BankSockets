@@ -37,7 +37,7 @@ public class BankMsgTextCoder implements BankMsgCoder {
   		byte data[] = msgString.getBytes(CHARSETNAME);
 
   		// Debug
-  		System.out.println("toWire(): msgString: " + msgString);
+  		Debugger.log("toWire(): msgString: " + msgString);
   		return data;
   	}
 
@@ -112,8 +112,8 @@ public class BankMsgTextCoder implements BankMsgCoder {
   		}
 
   		// Debug Messages
-  		System.out.println("BankMsgTextCoder.java:");
-  		System.out.println("return new BankMsg(isResponse " 
+  		Debugger.log("BankMsgTextCoder.java:");
+  		Debugger.log("return new BankMsg(isResponse " 
   			+ isResponse + ", isAuthentication " + isAuthentication + ", isAuthenticated " + isAuthenticated + ", isDeposit " + isDeposit
   			+ ", username " + username + ", password " + password + ", balance " + balance + ", transactionAmount " + transactionAmount + ")");
   		

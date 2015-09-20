@@ -16,6 +16,9 @@ public class BankClientUDP {
 	    	                                    " <Port>");
 	    }
 
+	    // Consume -d for debugger
+	    Debugger.setEnabled(true);
+
 	    InetAddress destAddr = InetAddress.getByName(args[0]); // Destination Address
 	    int destPort = Integer.parseInt(args[1]); // Destination port
 
@@ -54,10 +57,10 @@ public class BankClientUDP {
 	    msg = coder.fromWire(encodedAuth);
 	    System.out.println(msg);
 
-	    System.out.println("BankClientUDP.java");
-	    System.out.println("msg.isAuthenticated(): " + msg.isAuthenticated());
+	    Debugger.log("BankClientUDP.java");
+	    Debugger.log("msg.isAuthenticated(): " + msg.isAuthenticated());
 	    while (msg.isAuthenticated()) {
-	    	System.out.println("authtenticated");
+	    	// Debugger.log("authtenticated");
 	    }
 	}
 }
