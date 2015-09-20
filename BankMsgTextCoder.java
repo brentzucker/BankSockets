@@ -9,12 +9,13 @@ import java.util.Scanner;
 
 public class BankMsgTextCoder implements BankMsgCoder {
 	/*
-	 * Wire Format "BANKPROTO" <"a" | <"d" | "w">> [<RESPFLAG>] <USERNAME> [<PASSWORD>] <BALANCE> [<TRANSAMT>]
+	 * Wire Format "BANKPROTO" [<RESPFLAG>] [<AUTH>] <"a" | <"d" | "w">> <USERNAME> [<PASSWORD>] <BALANCE> [<TRANSAMT>]
 	 * Charset is fixed by the wire format.
 	 */
 
 	// Manifest constants for encoding
 	public static final String MAGIC = "Bankin";
+	public static final String AUTHENTICATED = "AUTH";
 	public static final String AUTHSTR = "a";
 	public static final String DEPOSITSTR = "d";
 	public static final String WITHDRAWSTR = "w";
@@ -25,14 +26,18 @@ public class BankMsgTextCoder implements BankMsgCoder {
   	public static final int MAX_WIRE_LENGTH = 2000;
 
   	public byte[] toWire(BankMsg msg) throws IOException {
-  		String msgString = MAGIC + DELIMSTR
-  					     + (msg.isAuthentication() ? AUTHSTR : (msg.isDeposit() ? DEPOSITSTR : WITHDRAWSTR))
-  						 + DELIMSTR + (msg.isResponse() ? RESPONSESTR + DELIMSTR : "")
-  						 + msg.getUsername() + DELIMSTR
-  						 + (msg.isAuthentication() ? msg.getPassword() + DELIMSTR : "")
-  						 + Double.toString(msg.getBalance()) + DELIMSTR
-  						 + (msg.isAuthentication() ? "" : msg.getTransactionAmount());
+  		String msgString = MAGIC + DELIMSTR 
+  				+ (msg.isResponse() ? RESPONSESTR + DELIMSTR : "")
+  				+ (msg.isAuthenticated() ? AUTHENTICATED + DELIMSTR : "")
+  				+ (msg.isAuthentication() ? AUTHSTR : (msg.isDeposit() ? DEPOSITSTR : WITHDRAWSTR))
+  				+ DELIMSTR + msg.getUsername() + DELIMSTR
+  				+ (msg.isAuthentication() ? msg.getPassword() + DELIMSTR : "")
+  				+ Double.toString(msg.getBalance()) + DELIMSTR
+  				+ (msg.isAuthentication() ? "" : msg.getTransactionAmount());
   		byte data[] = msgString.getBytes(CHARSETNAME);
+
+  		// Debug
+  		System.out.println("toWire(): msgString: " + msgString);
   		return data;
   	}
 
@@ -41,20 +46,36 @@ public class BankMsgTextCoder implements BankMsgCoder {
   		Scanner scan = new Scanner(new InputStreamReader(msgStream, CHARSETNAME));
 
   		// BankMsg Properties
-  		boolean isResponse, isAuthentication = false, isDeposit = false;
+  		boolean isResponse, isAuthenticated = false, isAuthentication = false, isDeposit = false;
   		String username, password = "";
   		Double balance, transactionAmount = 0.0;
 
   		String token;
 
   		try {
+
   			token = scan.next();
   			if (!token.equals(MAGIC)) {
   				throw new IOException("Bad magic string: " + token);
   			}
-  			
+
   			token = scan.next();
-  			if (token.equals(AUTHSTR)) {
+  			if (token.equals(RESPONSESTR)) {
+  				isResponse = true;
+  				token = scan.next();
+  			} else {
+  				isResponse = false;
+  			}
+  			
+  			if (token.equals(AUTHENTICATED)) { // If already been authenticated, let the transaction continue
+	  			
+	  			isAuthenticated = true;
+	  			token = scan.next();
+	  		} else {
+	  			isAuthenticated = false;
+	  		}
+
+			if (token.equals(AUTHSTR)) {
   				isAuthentication = true;
   			} else {
   				// Last conditional is unecessary 
@@ -66,14 +87,7 @@ public class BankMsgTextCoder implements BankMsgCoder {
 	  				isDeposit = false;
 	  			}
   			}
-
   			token = scan.next();
-  			if (token.equals(RESPONSESTR)) {
-  				isResponse = true;
-  				token = scan.next();
-  			} else {
-  				isResponse = false;
-  			}
 
   			// Current token is username
   			username = token;
@@ -90,13 +104,19 @@ public class BankMsgTextCoder implements BankMsgCoder {
   			balance = Double.parseDouble(token);
 
   			// If not response and balance will be correct after transaction, commit transaction
-  			if (!isAuthentication) {
+  			if (isAuthenticated && !isAuthentication) {
   				transactionAmount = Double.parseDouble(token);
   			}
   		} catch (IOException ioe) {
   			throw new IOException("Parse error...");
   		}
 
-  		return new BankMsg(isResponse, isAuthentication, isDeposit, username, password, balance, transactionAmount);
+  		// Debug Messages
+  		System.out.println("BankMsgTextCoder.java:");
+  		System.out.println("return new BankMsg(isResponse " 
+  			+ isResponse + ", isAuthentication " + isAuthentication + ", isAuthenticated " + isAuthenticated + ", isDeposit " + isDeposit
+  			+ ", username " + username + ", password " + password + ", balance " + balance + ", transactionAmount " + transactionAmount + ")");
+  		
+  		return new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, username, password, balance, transactionAmount);
   	}
 }

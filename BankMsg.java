@@ -8,6 +8,7 @@ public class BankMsg
 {
 	private boolean isResponse; // true if response from server
 	private boolean isAuthentication; // true if loggin in, false if transaction
+	private boolean isAuthenticated; // true if username/login exists
 	private boolean isDeposit; // true if deposit; false if withdrawl
 	private String username; // length restriction
 	private String password; // length restriction
@@ -17,7 +18,7 @@ public class BankMsg
 	public static final int MAX_USERNAME_LENGTH = 12; 
 	public static final int MAX_PASSWORD_LENGTH = 12;
 
-	public BankMsg(boolean isResponse, boolean isAuthentication, boolean isDeposit, String username, String password, Double balance, Double transactionAmount) throws IllegalArgumentException {
+	public BankMsg(boolean isResponse, boolean isAuthentication, boolean isAuthenticated, boolean isDeposit, String username, String password, Double balance, Double transactionAmount) throws IllegalArgumentException {
 		
 		// Check invariants
 		if (isResponse && balance == -1.0) { // Check if account exists
@@ -45,6 +46,7 @@ public class BankMsg
 
 		this.isResponse = isResponse;
 		this.isAuthentication = isAuthentication;
+		this.isAuthenticated = isAuthenticated;
 		this.isDeposit = isDeposit;
 		this.username = username;
 		this.password = password;
@@ -60,6 +62,10 @@ public class BankMsg
 	    this.isAuthentication = isAuthentication;
 	}
 
+	public void setAuthenticated(boolean isAuthenticated) {
+	    this.isAuthenticated = isAuthenticated;
+	}
+
 	public void setResponse(boolean isResponse) {
 	    this.isResponse = isResponse;
 	}	
@@ -70,6 +76,10 @@ public class BankMsg
 
 	public boolean isAuthentication() {
 	    return this.isAuthentication;
+	} 
+
+	public boolean isAuthenticated() {
+	    return this.isAuthenticated;
 	}
 
 	public boolean isResponse() {

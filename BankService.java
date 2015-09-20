@@ -56,9 +56,12 @@ public class BankService {
 				if (msg.getPassword().equals(bankAccount.getPassword())) {
 					
 					System.out.println("Authenticated");
+
 					// User is authenticated, return balance
 					balance = bankAccount.getBalance();
+					msg.setAuthenticated(true);
 					msg.setBalance(balance);
+					System.out.println("msg.isAuthenticated(): " + msg.isAuthenticated());
 				} else {
 					msg.setBalance(balance);
 				}
@@ -107,6 +110,8 @@ public class BankService {
 			System.out.println("Checking Authentication for: " + msg.getUsername());
 			msg.setBalance(balance);
 		}
+		System.out.println("BankService: Line 113");
+		System.out.println("msg.isAuthenticated(): " + msg.isAuthenticated());
 		return msg;
 	}
 }

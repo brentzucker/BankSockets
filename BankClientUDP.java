@@ -29,14 +29,14 @@ public class BankClientUDP {
 	    sock.connect(destAddr, destPort);
 
 	    // Create Authentication message
-	    // BankMsg(boolean isResponse, boolean isAuthentication, boolean isDeposit, String username, String password, Double balance, Double transactionAmount)
-	    BankMsg auth = new BankMsg(false, true, false, username, password, 0.0, 0.0);
+	    // BankMsg(boolean isResponse, boolean isAuthentication, boolean isAuthenticated, boolean isDeposit, String username, String password, Double balance, Double transactionAmount)
+	    BankMsg msg = new BankMsg(false, true, false, false, username, password, 0.0, 0.0);
 
 	    // Change Text to Bin
 	    BankMsgCoder coder = new BankMsgTextCoder();
 
 	    // Send request
-	    byte[] encodedAuth = coder.toWire(auth);
+	    byte[] encodedAuth = coder.toWire(msg);
 	    System.out.println("Sending Text-Encoded Request (" + encodedAuth.length
 	    													+ " bytes): ");
 	    System.out.println(encodedAuth);
@@ -51,7 +51,13 @@ public class BankClientUDP {
 
 	    System.out.println("Received Text-Encoded Response (" + encodedAuth.length
 	    													  + " bytes): ");
-	    auth = coder.fromWire(encodedAuth);
-	    System.out.println(auth);
+	    msg = coder.fromWire(encodedAuth);
+	    System.out.println(msg);
+
+	    System.out.println("BankClientUDP.java");
+	    System.out.println("msg.isAuthenticated(): " + msg.isAuthenticated());
+	    while (msg.isAuthenticated()) {
+	    	System.out.println("authtenticated");
+	    }
 	}
 }
