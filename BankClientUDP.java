@@ -59,8 +59,34 @@ public class BankClientUDP {
 
 	    Debugger.log("BankClientUDP.java");
 	    Debugger.log("msg.isAuthenticated(): " + msg.isAuthenticated());
-	    while (msg.isAuthenticated()) {
-	    	// Debugger.log("authtenticated");
+
+	    // If the user is authenticated, let them do transactions until they want to exit
+	    String raw_input = "", input[];
+	    while (msg.isAuthenticated() && !raw_input.equals("exit")) {
+
+	    	raw_input = scan.nextLine();
+	    	input = raw_input.split(" ");
+
+	    	if (!raw_input.equals("exit")) {
+		    	if (input.length != 2 || (!(input[0].equals("deposit")) && !(input[0].equals("withdraw"))) || isNotNumber(input[1])) { // Test for correct # of args
+		    		System.out.println("<deposit/withdraw> <transaction-amount>");
+		    	} else {
+		    		String transaction = input[0];
+		    		Double amount = Double.parseDouble(input[1]);
+
+		    		System.out.println(transaction);
+		    		System.out.println(amount);
+		    	}	    		
+	    	}
 	    }
+	}
+
+	public static boolean isNotNumber(String s) {
+		try {
+			Double.parseDouble(s);
+			return false;
+		} catch (NumberFormatException n) {
+			return true;
+		}
 	}
 }
