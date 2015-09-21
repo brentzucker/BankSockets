@@ -66,7 +66,7 @@ public class RemoteBankUdp {
 				isAuthentication = true,
 				isAuthenticated = false,
 				isDeposit = transaction.equals("deposit");
-				
+
 	    BankMsg msg = new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, username, password, 0.0, 0.0);
 
 	    // Change Text to Bin
@@ -74,9 +74,9 @@ public class RemoteBankUdp {
 
 	    // Send request
 	    byte[] encodedAuth = coder.toWire(msg);
-	    System.out.println("Sending Text-Encoded Request (" + encodedAuth.length
+	    Debugger.log("Sending Text-Encoded Request (" + encodedAuth.length
 	    													+ " bytes): ");
-	    System.out.println(encodedAuth);
+	    Debugger.log(encodedAuth);
 	    DatagramPacket message = new DatagramPacket(encodedAuth, encodedAuth.length);
 	    sock.send(message);
 
@@ -86,10 +86,10 @@ public class RemoteBankUdp {
 	    sock.receive(message);
 	    encodedAuth = Arrays.copyOfRange(message.getData(), 0, message.getLength());
 
-	    System.out.println("Received Text-Encoded Response (" + encodedAuth.length
+	    Debugger.log("Received Text-Encoded Response (" + encodedAuth.length
 	    													  + " bytes): ");
 	    msg = coder.fromWire(encodedAuth);
-	    System.out.println(msg);
+	    Debugger.log(msg);
 
 	    // Extract balance from msg
 	    Double balance = msg.getBalance();
@@ -97,54 +97,57 @@ public class RemoteBankUdp {
 	    Debugger.log("BankClientUDP.java");
 	    Debugger.log("msg.isAuthenticated(): " + msg.isAuthenticated());
 
-	    // // If the user is authenticated, let them do transactions until they want to exit
-	    // String raw_input = "", input[];
-	    // while (msg.isAuthenticated() && !raw_input.equals("exit")) {
+	    // If the user is authenticated, let them do transactions until they want to exit
+	    if (msg.isAuthenticated()) {
 
-	    // 	System.out.println("Balance: " + balance);
-	    // 	raw_input = scan.nextLine();
-	    // 	input = raw_input.split(" ");
+	    	// Username/Password accepted - Mark Authenticated Flag as True
+	    	isAuthenticated = true;
+	    	isAuthentication = false; // This message is not seeking authentication
 
-	    // 	if (!raw_input.equals("exit")) {
-		   //  	if (input.length != 2 || (!(input[0].equals("deposit")) && !(input[0].equals("withdraw"))) || isNotNumber(input[1])) { // Test for correct # of args
-		   //  		System.out.println("<deposit/withdraw> <transaction-amount>");
-		   //  	} else {
-		   //  		String transaction = input[0];
-		   //  		Double transactionAmount = Double.parseDouble(input[1]);
+	    	System.out.println("Welcome " + username +".");
 
-		    		// boolean isResponse = false,
-		    		// 		isAuthentication = false,
-		    		// 		isAuthenticated = true,
-		    		// 		isDeposit = transaction.equals("deposit");
+			// Create transaction message
+			msg = new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, 
+							  username, password, balance, transactionAmount);
+		
+			// Change text to Bin
+			encodedAuth = coder.toWire(msg);
 
-		   //  		// Create transaction message
-		   //  		// BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, String username, String password, Double balance, Double transactionAmount)
-	    // 			msg = new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, username, password, balance, transactionAmount);
+			Debugger.log("Sending Text-Encoded Request (" + encodedAuth.length + " bytes): ");
+			Debugger.log(encodedAuth);
+
+			// Encapsulate bin within DatagramPacket and Send
+			message = new DatagramPacket(encodedAuth, encodedAuth.length);
+			sock.send(message);
+
+			// New DatagramPacket to store received message
+		    message = new DatagramPacket(new byte[BankMsgTextCoder.MAX_WIRE_LENGTH],
+		    							 BankMsgTextCoder.MAX_WIRE_LENGTH);
+		    // Store received message in datagram packet
+		    sock.receive(message);
+
+		    // Get text encoded string from DatagramPacket
+		    encodedAuth = Arrays.copyOfRange(message.getData(), 0, message.getLength());
+
+		    Debugger.log("Received Text-Encoded Response (" + encodedAuth.length
+		    													  + " bytes): ");
+		    // Decode Message
+		    msg = coder.fromWire(encodedAuth);
+		    
+		    Debugger.log(msg);
+
+		    if (msg.getTransactionAmount() > -1) { // If the transaction amount was valid it will not be -1
 		    	
-	    // 			// Change text to Bin and send request
-	    // 			encodedAuth = coder.toWire(msg);
-	    // 			System.out.println("Sending Text-Encoded Request (" + encodedAuth.length
-	    // 													+ " bytes): ");
-		   //  		System.out.println(encodedAuth);
-	    // 			message = new DatagramPacket(encodedAuth, encodedAuth.length);
-	    // 			sock.send(message);
-
-	    // 			// Receive response
-				 //    message = new DatagramPacket(new byte[BankMsgTextCoder.MAX_WIRE_LENGTH],
-				 //    							 BankMsgTextCoder.MAX_WIRE_LENGTH);
-				 //    sock.receive(message);
-				 //    encodedAuth = Arrays.copyOfRange(message.getData(), 0, message.getLength());
-
-				 //    System.out.println("Received Text-Encoded Response (" + encodedAuth.length
-				 //    													  + " bytes): ");
-				 //    msg = coder.fromWire(encodedAuth);
-				 //    System.out.println(msg);
-
-				 //    // Extract balance from msg
-				 //    balance = msg.getBalance();
-		   //  	}	    		
-	    // 	}
-	    // }
+		    	System.out.println("Your " + transaction + " of " 
+		    					+ msg.getTransactionAmount() + " is successfully recorded.");
+		    	System.out.println("Your new account balance is " + msg.getBalance());
+		    	System.out.println("Thank you for banking with us");
+		    }
+		    else {
+		    	System.out.println("Invalid transaction.");
+		    	System.out.println("Your account balance is " + msg.getBalance());
+		    }
+	    }
 	}
 
 	public static boolean isNotNumber(String s) {

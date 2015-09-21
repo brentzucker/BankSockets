@@ -22,7 +22,7 @@ public class BankMsg
 		
 		// Check invariants
 		if (isResponse && balance == -1.0) { // Check if account exists
-			System.out.println("Invalid Login attempt for Username: " + username);
+			System.out.println("User authorization failed for Username: " + username);
 		} else {
 			if (isAuthentication && transactionAmount > 0) {
 				throw new IllegalArgumentException("Transaction amount must be 0 to log in: " + transactionAmount);
