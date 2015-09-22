@@ -5,7 +5,7 @@ import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.Scanner;
 
-import java.security.*;
+import java.security.NoSuchAlgorithmException;
 import java.io.UnsupportedEncodingException;
 
 public class RemoteBankUdp {
@@ -63,7 +63,7 @@ public class RemoteBankUdp {
 	    challenge = msg.getPassword();
 
 	    // Compute MD5 hash, hash = MD5(username, password, challenge)
-	    md5 = computeMD5(username + password + challenge);
+	    md5 = MD5Hash.computeMD5(username + password + challenge);
 	    Debugger.log("RemoteBankUdp: md5: " + md5);
 
 	    // Send MD5 hash and Receive Balance & Authentication
@@ -158,27 +158,6 @@ public class RemoteBankUdp {
 	    msg = coder.fromWire(encodedAuth);
 
 	    return msg;
-	}
-
-	// http://stackoverflow.com/a/3838348
-	public static String computeMD5(String md5) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-		MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-		messageDigest.reset();
-		messageDigest.update(md5.getBytes("UTF8"));
-		byte[] resultByte = messageDigest.digest();
-		return new String(bytesToHex(resultByte));
-	}
-
-	// http://stackoverflow.com/a/9855338
-	public static String bytesToHex(byte[] bytes) {
-		char[] hexArray = "0123456789ABCDEF".toCharArray();
-	    char[] hexChars = new char[bytes.length * 2];
-	    for ( int j = 0; j < bytes.length; j++ ) {
-	        int v = bytes[j] & 0xFF;
-	        hexChars[j * 2] = hexArray[v >>> 4];
-	        hexChars[j * 2 + 1] = hexArray[v & 0x0F];
-	    }
-	    return new String(hexChars);
 	}
 
 	public static boolean isNotNumber(String s) {
