@@ -5,18 +5,21 @@ import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.Scanner;
 
+import java.security.*;
+import java.io.UnsupportedEncodingException;
+
 public class RemoteBankUdp {
 
 	public static DatagramSocket sock;
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, NoSuchAlgorithmException, UnsupportedEncodingException {
 
 		Scanner scan = new Scanner(System.in);
 
 		InetAddress destAddr;
 		int destPort;
 
-		String username, password, transaction;
+		String challenge, md5, username, password, transaction;
 		Double transactionAmount, balance;
 		boolean isResponse, isAuthentication, isAuthenticated, isDeposit;
 
@@ -46,15 +49,26 @@ public class RemoteBankUdp {
 	    sock = new DatagramSocket();
 	    sock.connect(destAddr, destPort);
 
-	    // Create Authentication message
+	    // Create Authentication Request message
 		isResponse = false;
 		isAuthentication = true;
 		isAuthenticated = false;
 		isDeposit = transaction.equals("deposit");
-	    BankMsg msg = new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, username, password, 0.0, 0.0);
+	    BankMsg msg = new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, username, "0", 0.0, 0.0);
 
+	    // Send authentication Request message and receive challenge
 	    msg = sendAndReceive(msg);
 	    Debugger.log(msg);
+
+	    challenge = msg.getPassword();
+
+	    // Compute MD5 hash, hash = MD5(username, password, challenge)
+	    md5 = computeMD5(username + password + challenge);
+	    Debugger.log("RemoteBankUdp: md5: " + md5);
+
+	    // Send MD5 hash and Receive Balance & Authentication
+	    msg = new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, username, md5, 0.0, 0.0);
+	    msg = sendAndReceive(msg);
 
 	    // Extract balance from msg
 	    balance = msg.getBalance();
@@ -144,6 +158,27 @@ public class RemoteBankUdp {
 	    msg = coder.fromWire(encodedAuth);
 
 	    return msg;
+	}
+
+	// http://stackoverflow.com/a/3838348
+	public static String computeMD5(String md5) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+		messageDigest.reset();
+		messageDigest.update(md5.getBytes("UTF8"));
+		byte[] resultByte = messageDigest.digest();
+		return new String(bytesToHex(resultByte));
+	}
+
+	// http://stackoverflow.com/a/9855338
+	public static String bytesToHex(byte[] bytes) {
+		char[] hexArray = "0123456789ABCDEF".toCharArray();
+	    char[] hexChars = new char[bytes.length * 2];
+	    for ( int j = 0; j < bytes.length; j++ ) {
+	        int v = bytes[j] & 0xFF;
+	        hexChars[j * 2] = hexArray[v >>> 4];
+	        hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+	    }
+	    return new String(hexChars);
 	}
 
 	public static boolean isNotNumber(String s) {

@@ -4,10 +4,16 @@ import java.util.Scanner;
 import java.io.File;
 import java.io.FileNotFoundException;
 
+import java.io.UnsupportedEncodingException;
+import java.security.*;
+
 public class BankService {
 
 	// Map of usernames to BankAccounts
 	private Map<String, BankAccount> bankAccounts = new HashMap<String, BankAccount>();
+
+	// Map of SocketAddresses and Challenges
+	private Map<String, String> challenges = new HashMap<String, String>();
 
 	// Load Bank Accounts
 	public void loadBankAccounts() throws FileNotFoundException {
@@ -28,7 +34,7 @@ public class BankService {
 		scan.close();
 	}
 
-	public BankMsg handleRequest(BankMsg msg) {
+	public BankMsg handleRequest(BankMsg msg, String socketAddress) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 
 		Debugger.log("BankService.java: handleRequest() msg: " + msg);
 
@@ -50,14 +56,33 @@ public class BankService {
 		// Check if User exists
 		if ((bankAccount = bankAccounts.get(username)) != null) {
 
-			Debugger.log("BankService.java: msg.Authentication()" + msg.isAuthentication());
+			Debugger.log("BankService.java: msg.Authentication() " + msg.isAuthentication());
 
 			// If Authentication Check password and send back balance
 			if (msg.isAuthentication()) {
+
+				// Generate Challenge if (password == 0 && !isResponse)
+	  			if (msg.getPassword().equals("0")) {
+	  				// Generate Challenge
+	  				String challenge = "";
+	  				for (int i = 0; i < 64; i++) {
+	  					// Random character based off time
+	  					challenge += (char)((System.currentTimeMillis() % 89) + 33);
+	  				}
+	  				challenges.put(socketAddress, challenge);
+	  				Debugger.log("BankService: handleRequest() challenge: " + challenge);
+
+	  				msg.setPassword(challenge);
+	  			}
 				
 				System.out.println("Checking Authentication for: " + msg.getUsername());
 
-				if (msg.getPassword().equals(bankAccount.getPassword())) {
+				// Sent Challenge == Server Challenge
+				String md5 = computeMD5(bankAccount.getUsername() 
+										+ bankAccount.getPassword() 
+										+ challenges.get(socketAddress));
+
+				if (msg.getPassword().equals(md5)) {
 					
 					Debugger.log("Authenticated");
 
@@ -114,5 +139,26 @@ public class BankService {
 			msg.setBalance(balance);
 		}
 		return msg;
+	}
+
+	// http://stackoverflow.com/a/3838348
+	public static String computeMD5(String md5) throws NoSuchAlgorithmException, UnsupportedEncodingException{
+		MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+		messageDigest.reset();
+		messageDigest.update(md5.getBytes("UTF8"));
+		byte[] resultByte = messageDigest.digest();
+		return new String(bytesToHex(resultByte));
+	}
+
+	// http://stackoverflow.com/a/9855338
+	public static String bytesToHex(byte[] bytes) {
+		char[] hexArray = "0123456789ABCDEF".toCharArray();
+	    char[] hexChars = new char[bytes.length * 2];
+	    for ( int j = 0; j < bytes.length; j++ ) {
+	        int v = bytes[j] & 0xFF;
+	        hexChars[j * 2] = hexArray[v >>> 4];
+	        hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+	    }
+	    return new String(hexChars);
 	}
 }

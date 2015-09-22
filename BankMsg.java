@@ -11,7 +11,7 @@ public class BankMsg
 	private boolean isAuthenticated; // true if username/login exists
 	private boolean isDeposit; // true if deposit; false if withdrawl
 	private String username; // length restriction
-	private String password; // length restriction
+	private String password; // Stores Challenge and Hashed Response
 	private Double balance;
 	private Double transactionAmount;
 
@@ -22,7 +22,7 @@ public class BankMsg
 		
 		// Check invariants
 		if (isResponse && balance == -1.0) { // Check if account exists
-			System.out.println("User authorization failed for Username: " + username);
+			// System.out.println("User authorization failed for Username: " + username);
 		} else {
 			if (isAuthentication && transactionAmount > 0) {
 				throw new IllegalArgumentException("Transaction amount must be 0 to log in: " + transactionAmount);
@@ -32,9 +32,6 @@ public class BankMsg
 			}
 			if (username.length() > MAX_USERNAME_LENGTH) {
 				throw new IllegalArgumentException("Bad Username: " + username);
-			}
-			if (password.length() > MAX_PASSWORD_LENGTH) {
-				throw new IllegalArgumentException("Bad Password: " + password);			
 			}
 			if (transactionAmount < 0) {
 				throw new IllegalArgumentException("Invalid Transaction Amount: " + transactionAmount);			
@@ -98,9 +95,6 @@ public class BankMsg
 	}
 
 	public void setPassword(String password) {
-		if (password.length() == 0 || password.length() > MAX_PASSWORD_LENGTH) {
-			throw new IllegalArgumentException("Bad Password: " + password);			
-		}
 	    this.password = password;
 	}
 

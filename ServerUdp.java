@@ -3,9 +3,11 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.Arrays;
 
+import java.security.*;
+
 public class ServerUdp {
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
 
 		if (args.length != 1) {
 			throw new IllegalArgumentException("Parameter(s): <Port>");
@@ -38,7 +40,7 @@ public class ServerUdp {
 				BankMsg msg = coder.fromWire(encodedMsg);
 
 				// Make transaction/authentication
-				msg = service.handleRequest(msg);
+				msg = service.handleRequest(msg, packet.getSocketAddress().toString());
 
 				Debugger.log("BankServerUDP: msg = service.handleRequest(msg) msg: " + msg);
 
