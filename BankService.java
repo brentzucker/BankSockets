@@ -34,54 +34,36 @@ public class BankService {
 		scan.close();
 	}
 
-	public BankMsg handleRequest(BankMsg msg, String socketAddress) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-
-		Debugger.log("BankService.java: handleRequest() msg: " + msg);
+	public BankMsg handleAuthentication(BankMsg msg, String socketAddress) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 
 		BankAccount bankAccount;
+		String username = msg.getUsername();
+		Double balance = -1.0;
 
-		String username = msg.getUsername(),
-			   password = "";
+		/* Generate Challenge if Requesting Challenge otherwise see if Hashses Match */
 
-		Double balance = -1.0,
-			   transactionAmount = -1.0;
+		if (msg.getPassword().equals("challengeRequest")) {
+			// Generate Challenge
+			String challenge = "";
+			for (int i = 0; i < 64; i++) {
+				// Random character based off time
+				challenge += (char)((System.currentTimeMillis() % 89) + 33);
+			}
+			challenges.put(socketAddress, challenge);
+			Debugger.log("BankService: handleRequest() challenge: " + challenge);
 
-		// If response, just send it back. Send back updated balance?
-		if (msg.isResponse()) {
-			return msg;
-		}
-		// Make message a response
-		msg.setResponse(true);
+			msg.setPassword(challenge);
+		} else {
 
-		// Check if User exists
-		if ((bankAccount = bankAccounts.get(username)) != null) {
+			if ((bankAccount = bankAccounts.get(username)) != null) {
 
-			Debugger.log("BankService.java: msg.Authentication() " + msg.isAuthentication());
-
-			// If Authentication Check password and send back balance
-			if (msg.isAuthentication()) {
-
-				// Generate Challenge if (password == 0 && !isResponse)
-	  			if (msg.getPassword().equals("0")) {
-	  				// Generate Challenge
-	  				String challenge = "";
-	  				for (int i = 0; i < 64; i++) {
-	  					// Random character based off time
-	  					challenge += (char)((System.currentTimeMillis() % 89) + 33);
-	  				}
-	  				challenges.put(socketAddress, challenge);
-	  				Debugger.log("BankService: handleRequest() challenge: " + challenge);
-
-	  				msg.setPassword(challenge);
-	  			}
-				
 				System.out.println("Checking Authentication for: " + msg.getUsername());
 
-				// Sent Challenge == Server Challenge
-				String md5 = MD5Hash.computeMD5(bankAccount.getUsername() 
-										+ bankAccount.getPassword() 
-										+ challenges.get(socketAddress));
+				// Compute Servers MD5 Hash
+				String strToCompute = bankAccount.getUsername() + bankAccount.getPassword() + challenges.get(socketAddress);
+				String md5 = MD5Hash.computeMD5(strToCompute);
 
+				// Compare Clients Hash to Servers Hash
 				if (msg.getPassword().equals(md5)) {
 					
 					Debugger.log("Authenticated");
@@ -93,45 +75,75 @@ public class BankService {
 				} else {
 					msg.setBalance(balance);
 				}
-				
-			} else {
+			}
+		}
+		return msg;
+	}
 
-				// Not authentication, depositing or withdrawing
-				if (msg.isDeposit()) {
+	public BankMsg handleRequest(BankMsg msg, String socketAddress) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 
-					// If msg has valid transaction amount, update transaction & balance
-					if (msg.getTransactionAmount() >= 0) {
-						
-						transactionAmount = msg.getTransactionAmount();
-						balance = bankAccount.getBalance() + msg.getTransactionAmount();
+		Debugger.log("BankService.java: handleRequest() msg: " + msg);
 
-						// Update Balance in Map and Msg
-						bankAccount.setBalance(balance);
-						msg.setBalance(balance);
-					} else {
+		BankAccount bankAccount;
+		String username = msg.getUsername(),
+			   password = "";
+		Double balance = -1.0,
+			   transactionAmount = -1.0;
 
-						// If invalid transaction amount, tAmt changed to -1 & balance stays the same
-						msg.setTransactionAmount(transactionAmount);
-					}
-				} else { // Withdraw
+		// If response, just send it back.
+		if (msg.isResponse()) {
+			return msg;
+		}
+		// Make message a response
+		msg.setResponse(true);
 
-					// If msg has valid transaction amount, update the transaction & balance
-					if (msg.getTransactionAmount() >= 0) {
+		/* Handle Authentication */
 
-						transactionAmount = msg.getTransactionAmount();
-						balance = bankAccount.getBalance() - msg.getTransactionAmount();
+		// If Authentication Check password and send back balance
+		if (msg.isAuthentication()) {
 
-						// Update Balance in Map and Msg
-						bankAccount.setBalance(balance);
-						msg.setBalance(balance);
-					} else {
+			msg = handleAuthentication(msg, socketAddress);
+		} 
 
-						// If invalid transaction amount, tAmt changed to -1 & balance stays the same
-						msg.setTransactionAmount(transactionAmount);
-					}
+		// Check if User exists
+		if ((bankAccount = bankAccounts.get(username)) != null) {
+
+			Debugger.log("BankService.java: msg.Authentication() " + msg.isAuthentication());
+
+			// Not authentication, depositing or withdrawing
+			if (msg.isDeposit()) {
+
+				// If msg has valid transaction amount, update transaction & balance
+				if (msg.getTransactionAmount() >= 0) {
+					
+					transactionAmount = msg.getTransactionAmount();
+					balance = bankAccount.getBalance() + msg.getTransactionAmount();
+
+					// Update Balance in Map and Msg
+					bankAccount.setBalance(balance);
+					msg.setBalance(balance);
+				} else {
+
+					// If invalid transaction amount, tAmt changed to -1 & balance stays the same
+					msg.setTransactionAmount(transactionAmount);
+				}
+			} else { // Withdraw
+
+				// If msg has valid transaction amount, update the transaction & balance
+				if (msg.getTransactionAmount() >= 0) {
+
+					transactionAmount = msg.getTransactionAmount();
+					balance = bankAccount.getBalance() - msg.getTransactionAmount();
+
+					// Update Balance in Map and Msg
+					bankAccount.setBalance(balance);
+					msg.setBalance(balance);
+				} else {
+
+					// If invalid transaction amount, tAmt changed to -1 & balance stays the same
+					msg.setTransactionAmount(transactionAmount);
 				}
 			}
-
 		} else {
 
 			// Username does not exist, return balance of -1

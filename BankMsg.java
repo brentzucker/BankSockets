@@ -15,23 +15,15 @@ public class BankMsg
 	private Double balance;
 	private Double transactionAmount;
 
-	public static final int MAX_USERNAME_LENGTH = 12; 
-	public static final int MAX_PASSWORD_LENGTH = 12;
-
 	public BankMsg(boolean isResponse, boolean isAuthentication, boolean isAuthenticated, boolean isDeposit, String username, String password, Double balance, Double transactionAmount) throws IllegalArgumentException {
 		
 		// Check invariants
-		if (isResponse && balance == -1.0) { // Check if account exists
-			// System.out.println("User authorization failed for Username: " + username);
-		} else {
+		if (balance > -1.0) { // Check if account exists
 			if (isAuthentication && transactionAmount > 0) {
 				throw new IllegalArgumentException("Transaction amount must be 0 to log in: " + transactionAmount);
 			}
 			if (isAuthentication && (username.length() == 0 || password.length() == 0)) {
 				throw new IllegalArgumentException("Invalid Login Attempt: " + username);
-			}
-			if (username.length() > MAX_USERNAME_LENGTH) {
-				throw new IllegalArgumentException("Bad Username: " + username);
 			}
 			if (transactionAmount < 0) {
 				throw new IllegalArgumentException("Invalid Transaction Amount: " + transactionAmount);			
@@ -84,9 +76,6 @@ public class BankMsg
 	}
 
 	public void setUsername(String username) {
-		if (username.length() == 0 || username.length() > MAX_USERNAME_LENGTH) {
-			throw new IllegalArgumentException("Bad Username: " + username);
-		}
 	    this.username = username;
 	}
 

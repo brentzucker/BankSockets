@@ -54,41 +54,38 @@ public class RemoteBankUdp {
 		isAuthentication = true;
 		isAuthenticated = false;
 		isDeposit = transaction.equals("deposit");
-	    BankMsg msg = new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, username, "0", 0.0, 0.0);
+	    BankMsg msg = new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, "challengeRequest", "challengeRequest", 0.0, 0.0);
 
 	    // Send authentication Request message and receive challenge
 	    msg = sendAndReceive(msg);
-	    Debugger.log(msg);
-
 	    challenge = msg.getPassword();
 
 	    // Compute MD5 hash, hash = MD5(username, password, challenge)
 	    md5 = MD5Hash.computeMD5(username + password + challenge);
+
+	    Debugger.log(msg);
 	    Debugger.log("RemoteBankUdp: md5: " + md5);
 
 	    // Send MD5 hash and Receive Balance & Authentication
 	    msg = new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, username, md5, 0.0, 0.0);
 	    msg = sendAndReceive(msg);
 
-	    // Extract balance from msg
-	    balance = msg.getBalance();
-
-	    Debugger.log("BankClientUDP.java");
-	    Debugger.log("msg.isAuthenticated(): " + msg.isAuthenticated());
+	    /* Complete Transaction */
 
 	    // If the user is authenticated complete the transaction
 	    if (msg.isAuthenticated()) {
+
+	    	System.out.println("Welcome " + username +".");
+
+	    	// Extract balance from msg
+	    	balance = msg.getBalance();
 
 	    	// Username/Password accepted - Mark Authenticated Flag as True
 	    	isAuthenticated = true;
 	    	isAuthentication = false; // This message is not seeking authentication
 
-	    	System.out.println("Welcome " + username +".");
-
-			// Create transaction message
-			msg = new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, 
-							  username, password, balance, transactionAmount);
-
+			// Send Transaction Message, Receive new balance
+			msg = new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, username, password, balance, transactionAmount);
 		    msg = sendAndReceive(msg);
 		    
 		    Debugger.log(msg);
@@ -104,6 +101,8 @@ public class RemoteBankUdp {
 		    	System.out.println("Invalid transaction.");
 		    	System.out.println("Your account balance is " + msg.getBalance());
 		    }
+	    } else {
+	    	System.out.println("User authorization failed for Username: " + username);
 	    }
 	}
 
