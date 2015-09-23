@@ -10,12 +10,18 @@ public class ServerTcp {
 	      throw new IllegalArgumentException("Parameter(s): <Port>");
 	    }
 
+	    // Consume -d for debugger
+	    Debugger.setEnabled(true);
+
 	    int port = Integer.parseInt(args[0]); // Receiving Port
 	    ServerSocket servSock = new ServerSocket(port);
 
 		// Change Bin to Text for a different coding approach
 		BankMsgCoder coder = new BankMsgTextCoder();
 		BankService service = new BankService();
+
+		// Load Bank Accounts fromt text file
+		service.loadBankAccounts();
 
 		while (true) {
 			Socket clntSock = servSock.accept();

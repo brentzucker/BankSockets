@@ -14,9 +14,7 @@ public class RemoteBankUdp {
 	public static DatagramSocket sock;
 
 	public static void main(String[] args) throws IOException, NoSuchAlgorithmException, UnsupportedEncodingException {
-
-		Scanner scan = new Scanner(System.in);
-
+		
 		BankMsg msgToSend, msgReceieved;
 		InetAddress destAddr;
 		int destPort;
