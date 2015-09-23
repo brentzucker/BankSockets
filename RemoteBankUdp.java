@@ -93,6 +93,7 @@ public class RemoteBankUdp {
 	    	isAuthentication = false; // This message is not seeking authentication
 
 			// Send Transaction Message, Receive new balance
+			Debugger.log("Authentication complete. Sending " + transaction + " request of " + transactionAmount + " to server");
 			sequenceNumber = 3;
 			msgToSend = new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, username, password, balance, transactionAmount);
     	    while ((msgReceieved = sendAndReceive(msgToSend)).isTimedout() || msgReceieved.getSequenceNumber() != sequenceNumber) { // If timeout or the Sequence Number is not what is expected then resend

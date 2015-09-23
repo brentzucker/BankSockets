@@ -60,12 +60,10 @@ public class BankService {
 
 		/* Complete Transaction */ 
 
-		// If Authentication is complete check if the User is Authenticated, then complete transaction
-		if (msg.isAuthenticated()) {
+		else if (msg.isAuthenticated()) { // The Authentication is complete. Check if the User is Authenticated, then complete transaction
 			msg = handleTransaction(msg);
-		} else { 
-			msg.setBalance(-1.0); // Username does not exist, return balance of -1
 		}
+
 		return msg;
 	}
 
@@ -83,6 +81,7 @@ public class BankService {
 			sourceAddresses.put(source, new SourceAddress(socketAddress, port, challenge));
 			msg.setPassword(challenge);
 		}
+		Debugger.log("Sending challenge " + challenge + " to client " + socketAddress + ":" + port);
 		return msg;
 	}
 
@@ -108,9 +107,13 @@ public class BankService {
 					balance = bankAccount.getBalance();
 					msg.setAuthenticated(true);
 					msg.setBalance(balance);
+					Debugger.log("Sending success message to client");
 				} else {
+					Debugger.log("Hash does not match: " +  msg.getPassword() + "  !=  " + md5);
 					msg.setBalance(balance);
 				}
+			} else {
+				Debugger.log("Username not present");
 			}
 		}
 		return msg;
@@ -133,15 +136,17 @@ public class BankService {
 				// Update Balance in Map and Msg
 				bankAccount.setBalance(balance);
 				msg.setBalance(balance);
+				Debugger.log("Deposit of " + msg.getTransactionAmount() + " succesful.");
 			} else {
 
+				Debugger.log("Deposit of " + msg.getTransactionAmount() + " failed.");
 				// If invalid transaction amount, tAmt changed to -1 & balance stays the same
 				msg.setTransactionAmount(transactionAmount);
 			}
 		} else { // Withdraw
 
 			// If msg has valid transaction amount, update the transaction & balance
-			if (msg.getTransactionAmount() >= 0) {
+			if (msg.getTransactionAmount() >= 0 && msg.getTransactionAmount() <= msg.getBalance()) {
 
 				transactionAmount = msg.getTransactionAmount();
 				balance = bankAccount.getBalance() - msg.getTransactionAmount();
@@ -149,8 +154,10 @@ public class BankService {
 				// Update Balance in Map and Msg
 				bankAccount.setBalance(balance);
 				msg.setBalance(balance);
+				Debugger.log("Withdrawl of " + msg.getTransactionAmount() + " succesful.");
 			} else {
 
+				Debugger.log("Withdrawl of " + msg.getTransactionAmount() + " failed.");
 				// If invalid transaction amount, tAmt changed to -1 & balance stays the same
 				msg.setTransactionAmount(transactionAmount);
 			}

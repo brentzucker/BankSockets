@@ -27,12 +27,6 @@ public class BankMsg
 			if (isAuthentication && (username.length() == 0 || password.length() == 0)) {
 				throw new IllegalArgumentException("Invalid Login Attempt: " + username);
 			}
-			if (transactionAmount < 0) {
-				throw new IllegalArgumentException("Invalid Transaction Amount: " + transactionAmount);			
-			}
-			if (!isResponse && !isDeposit && transactionAmount > balance) {
-				throw new IllegalArgumentException("Insufficient funds. Invalid Transaction Amount: " + transactionAmount);			
-			}
 		}
 
 		this.isTimedout = false;
@@ -68,12 +62,6 @@ public class BankMsg
 	}
 
 	public void setTransactionAmount(Double transactionAmount) {
-		if (transactionAmount < 0) {
-			throw new IllegalArgumentException("Invalid Transaction Amount: " + transactionAmount);			
-		}
-		if (!isDeposit && transactionAmount > balance) {
-			throw new IllegalArgumentException("Insufficient funds. Invalid Transaction Amount: " + transactionAmount);			
-		}
 	    this.transactionAmount = transactionAmount;
 	}
 
