@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -61,7 +62,7 @@ public class RemoteBankUdp {
 
 	    // Send authentication Request message and receive challenge
 	    Debugger.log("Sending Authentication Request to the Server " + args[0]);
-	    while ((msgReceieved = sendAndReceive(msgToSend)).getSequenceNumber() != sequenceNumber) { // If timeout or the Sequence Number is not what is expected then resend
+	    while ((msgReceieved = sendAndReceive(msgToSend)).isTimedout() || msgReceieved.getSequenceNumber() != sequenceNumber) { // If timeout or the Sequence Number is not what is expected then resend
 	    	Debugger.log("Retransmitting Request after timeout");
 	    }
 	    challenge = msgReceieved.getPassword();
@@ -73,8 +74,8 @@ public class RemoteBankUdp {
 	    Debugger.log("Sending Username " + username + " and hash " + md5 + " to the Server ");
 	    sequenceNumber = 2;
 	    msgToSend = new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, username, md5, 0.0, 0.0);
-	   	while ((msgReceieved = sendAndReceive(msgToSend)).getSequenceNumber() != sequenceNumber) { // If timeout or the Sequence Number is not what is expected then resend
-	    	Debugger.log("Retransmitting Request after timeout");
+	   	while ((msgReceieved = sendAndReceive(msgToSend)).isTimedout() || msgReceieved.getSequenceNumber() != sequenceNumber) { // If timeout or the Sequence Number is not what is expected then resend
+	    	Debugger.log("Retransmitting Request after timeout: 1000ms");
 	    }
 
 	    /* Complete Transaction */
@@ -94,7 +95,7 @@ public class RemoteBankUdp {
 			// Send Transaction Message, Receive new balance
 			sequenceNumber = 3;
 			msgToSend = new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, username, password, balance, transactionAmount);
-    	    while ((msgReceieved = sendAndReceive(msgToSend)).getSequenceNumber() != sequenceNumber) { // If timeout or the Sequence Number is not what is expected then resend
+    	    while ((msgReceieved = sendAndReceive(msgToSend)).isTimedout() || msgReceieved.getSequenceNumber() != sequenceNumber) { // If timeout or the Sequence Number is not what is expected then resend
 		    	Debugger.log("Retransmitting Request after timeout");
 		    }
 		    
@@ -140,7 +141,8 @@ public class RemoteBankUdp {
 	}
 
 	public static BankMsg sendAndReceive(BankMsg msg) throws IOException {
-	
+		
+		boolean received = false;
 		// Change text to Bin
 	    BankMsgCoder coder = new BankMsgTextCoder();
 		byte[] encodedAuth = coder.toWire(msg);
@@ -154,8 +156,19 @@ public class RemoteBankUdp {
 		// New DatagramPacket to store received message
 	    message = new DatagramPacket(new byte[BankMsgTextCoder.MAX_WIRE_LENGTH],
 	    							 BankMsgTextCoder.MAX_WIRE_LENGTH);
-	    // Store received message in datagram packet
-	    sock.receive(message);
+
+	    // Set Timeout for Socket to Receive to 1 second
+	    // http://stackoverflow.com/a/10056866
+	    sock.setSoTimeout(1000);
+	    try {
+		    // Store received message in datagram packet
+		    sock.receive(message);
+		    received = true;
+	    } catch (SocketTimeoutException e) {
+	    	Debugger.log("Timeout");
+	    	msg.setTimedout(true);
+	    	return msg;
+	    }	    	
 
 	    // Get text encoded string from DatagramPacket
 	    encodedAuth = Arrays.copyOfRange(message.getData(), 0, message.getLength());

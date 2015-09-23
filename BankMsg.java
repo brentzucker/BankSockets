@@ -6,6 +6,7 @@
 // Protocol
 public class BankMsg 
 {
+	private boolean isTimedout; // False if not timed out
 	private boolean isResponse; // true if response from server
 	private boolean isAuthentication; // true if loggin in, false if transaction
 	private boolean isAuthenticated; // true if username/login exists
@@ -34,6 +35,7 @@ public class BankMsg
 			}
 		}
 
+		this.isTimedout = false;
 		this.isResponse = isResponse;
 		this.sequenceNumber = sequenceNumber;
 		this.isAuthentication = isAuthentication;
@@ -73,6 +75,14 @@ public class BankMsg
 			throw new IllegalArgumentException("Insufficient funds. Invalid Transaction Amount: " + transactionAmount);			
 		}
 	    this.transactionAmount = transactionAmount;
+	}
+
+	public void setTimedout(boolean isTimedout) {
+	    this.isTimedout = isTimedout;
+	}
+
+	public boolean isTimedout() {
+	    return this.isTimedout;
 	}
 
 	public boolean isDeposit() {
