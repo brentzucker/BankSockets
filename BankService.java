@@ -12,8 +12,8 @@ public class BankService {
 	// Map of usernames to BankAccounts
 	private Map<String, BankAccount> bankAccounts = new HashMap<String, BankAccount>();
 
-	// Map of SocketAddresses and Challenges
-	private Map<String, String> challenges = new HashMap<String, String>();
+	// Map of SocketAddresses, challenges, and Message Counts
+	private Map<String, SourceAddress> sourceAddresses = new HashMap<String, SourceAddress>();
 
 	// Load Bank Accounts
 	public void loadBankAccounts() throws FileNotFoundException {
@@ -34,7 +34,9 @@ public class BankService {
 		scan.close();
 	}
 
-	public BankMsg handleRequest(BankMsg msg, String socketAddress) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+	public BankMsg handleRequest(BankMsg msg, String socketAddress, int port) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+
+		// Increment sourceAddress.countMessageReceived()
 
 		// If response, just send it back.
 		if (msg.isResponse()) {
@@ -48,10 +50,11 @@ public class BankService {
 		// Generate Challenge if Requesting Challenge otherwise see if Hashses Match
 		if (msg.isAuthentication()) {
 
+			// if msg.sequenceNumber() == sourceAddress.messagesReceived() % MESSAGES_REQUIRED_FOR_TRANSACTION
 			if (msg.getPassword().equals("challengeRequest")) {
-				msg = handleAuthenticationRequest(msg, socketAddress);
+				msg = handleAuthenticationRequest(msg, socketAddress, port);
 			} else {
-				msg = handleAuthentication(msg, socketAddress);
+				msg = handleAuthentication(msg, socketAddress, port);
 			}
 		} 
 
@@ -66,9 +69,10 @@ public class BankService {
 		return msg;
 	}
 
-	public BankMsg handleAuthenticationRequest(BankMsg msg, String socketAddress) {
+	public BankMsg handleAuthenticationRequest(BankMsg msg, String socketAddress, int port) {
 
-		String challenge = "";
+		String source = socketAddress + ":" + port,
+			   challenge = "";
 
 		if (msg.getPassword().equals("challengeRequest")) {
 			// Generate Challenge
@@ -76,16 +80,17 @@ public class BankService {
 				// Random character based off time
 				challenge += (char)((System.currentTimeMillis() % 89) + 33);
 			}
-			challenges.put(socketAddress, challenge);
+			sourceAddresses.put(source, new SourceAddress(socketAddress, port, challenge));
 			msg.setPassword(challenge);
 		}
 		return msg;
 	}
 
-	public BankMsg handleAuthentication(BankMsg msg, String socketAddress) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+	public BankMsg handleAuthentication(BankMsg msg, String socketAddress, int port) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 
 		BankAccount bankAccount;
-		String username = msg.getUsername();
+		String username = msg.getUsername(),
+			   source = socketAddress + ":" + port;
 		Double balance = -1.0;
 		
 		if (!(msg.getPassword().equals("challengeRequest"))) {
@@ -93,7 +98,7 @@ public class BankService {
 			if ((bankAccount = bankAccounts.get(username)) != null) {
 
 				// Compute Servers MD5 Hash
-				String strToCompute = bankAccount.getUsername() + bankAccount.getPassword() + challenges.get(socketAddress);
+				String strToCompute = bankAccount.getUsername() + bankAccount.getPassword() + sourceAddresses.get(source).getChallenge();
 				String md5 = MD5Hash.computeMD5(strToCompute);
 
 				// Compare Clients Hash to Servers Hash

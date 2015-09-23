@@ -57,16 +57,15 @@ public class RemoteBankUdp {
 	    BankMsg msg = new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, "challengeRequest", "challengeRequest", 0.0, 0.0);
 
 	    // Send authentication Request message and receive challenge
+	    Debugger.log("Sending Authentication Request to the Server " + args[0]);
 	    msg = sendAndReceive(msg);
 	    challenge = msg.getPassword();
 
 	    // Compute MD5 hash, hash = MD5(username, password, challenge)
 	    md5 = MD5Hash.computeMD5(username + password + challenge);
 
-	    Debugger.log(msg);
-	    Debugger.log("RemoteBankUdp: md5: " + md5);
-
-	    // Send MD5 hash and Receive Balance & Authentication
+	    // Send username & MD5 hash and Receive Balance & Authentication
+	    Debugger.log("Sending Username " + username + " and hash " + md5 + " to the Server ");
 	    msg = new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, username, md5, 0.0, 0.0);
 	    msg = sendAndReceive(msg);
 
