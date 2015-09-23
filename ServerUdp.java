@@ -31,23 +31,16 @@ public class ServerUdp {
 			DatagramPacket packet = new DatagramPacket(inBuffer, inBuffer.length);
 			sock.receive(packet);
 			byte[] encodedMsg = Arrays.copyOfRange(packet.getData(), 0, packet.getLength());
-			System.out.println("Handling request from " + packet.getSocketAddress() + " ("
-														+ encodedMsg.length + " bytes)");
 		
 			try {
 				// Receive
 				BankMsg msg = coder.fromWire(encodedMsg);
 
-				// Make transaction/authentication
+				// Handle Authentication/Transaction Request
 				msg = service.handleRequest(msg, packet.getSocketAddress().toString());
-
-				Debugger.log("BankServerUDP: msg = service.handleRequest(msg) msg: " + msg);
 
 				// Put data in packet
 				packet.setData(coder.toWire(msg));
-
-				System.out.println("Sending response (" + packet.getLength() + " bytes):");
-				System.out.println(msg);
 				
 				// Send packet
 				sock.send(packet);
