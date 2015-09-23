@@ -14,8 +14,9 @@ public class BankMsg
 	private String password; // Stores Challenge and Hashed Response
 	private Double balance;
 	private Double transactionAmount;
+	private int sequenceNumber;
 
-	public BankMsg(boolean isResponse, boolean isAuthentication, boolean isAuthenticated, boolean isDeposit, String username, String password, Double balance, Double transactionAmount) throws IllegalArgumentException {
+	public BankMsg(boolean isResponse, int sequenceNumber, boolean isAuthentication, boolean isAuthenticated, boolean isDeposit, String username, String password, Double balance, Double transactionAmount) throws IllegalArgumentException {
 		
 		// Check invariants
 		if (balance > -1.0) { // Check if account exists
@@ -34,6 +35,7 @@ public class BankMsg
 		}
 
 		this.isResponse = isResponse;
+		this.sequenceNumber = sequenceNumber;
 		this.isAuthentication = isAuthentication;
 		this.isAuthenticated = isAuthenticated;
 		this.isDeposit = isDeposit;
@@ -58,6 +60,20 @@ public class BankMsg
 	public void setResponse(boolean isResponse) {
 	    this.isResponse = isResponse;
 	}	
+
+	public void setSequenceNumber(int sequenceNumber) {
+	    this.sequenceNumber = sequenceNumber;
+	}
+
+	public void setTransactionAmount(Double transactionAmount) {
+		if (transactionAmount < 0) {
+			throw new IllegalArgumentException("Invalid Transaction Amount: " + transactionAmount);			
+		}
+		if (!isDeposit && transactionAmount > balance) {
+			throw new IllegalArgumentException("Insufficient funds. Invalid Transaction Amount: " + transactionAmount);			
+		}
+	    this.transactionAmount = transactionAmount;
+	}
 
 	public boolean isDeposit() {
 	    return this.isDeposit;
@@ -99,14 +115,8 @@ public class BankMsg
 	    return this.balance;
 	}
 
-	public void setTransactionAmount(Double transactionAmount) {
-		if (transactionAmount < 0) {
-			throw new IllegalArgumentException("Invalid Transaction Amount: " + transactionAmount);			
-		}
-		if (!isDeposit && transactionAmount > balance) {
-			throw new IllegalArgumentException("Insufficient funds. Invalid Transaction Amount: " + transactionAmount);			
-		}
-	    this.transactionAmount = transactionAmount;
+	public int getSequenceNumber() {
+	    return this.sequenceNumber;
 	}
 
 	public Double getTransactionAmount() {

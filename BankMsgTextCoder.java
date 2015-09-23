@@ -27,6 +27,7 @@ public class BankMsgTextCoder implements BankMsgCoder {
 
   	public byte[] toWire(BankMsg msg) throws IOException {
   		String msgString = MAGIC + DELIMSTR 
+  				+ msg.getSequenceNumber() + DELIMSTR
   				+ (msg.isResponse() ? RESPONSESTR + DELIMSTR : "")
   				+ (msg.isAuthenticated() ? AUTHENTICATED + DELIMSTR : "")
   				+ (msg.isAuthentication() ? AUTHSTR : (msg.isDeposit() ? DEPOSITSTR : WITHDRAWSTR))
@@ -49,6 +50,7 @@ public class BankMsgTextCoder implements BankMsgCoder {
   		boolean isResponse, isAuthenticated = false, isAuthentication = false, isDeposit = false;
   		String username, password = "";
   		Double balance, transactionAmount = 0.0;
+  		int sequenceNumber;
 
   		String token;
 
@@ -58,6 +60,10 @@ public class BankMsgTextCoder implements BankMsgCoder {
   			if (!token.equals(MAGIC)) {
   				throw new IOException("Bad magic string: " + token);
   			}
+  			token = scan.next();
+
+  			// Current token is sequence Number
+  			sequenceNumber = Integer.parseInt(token);
 
   			token = scan.next();
   			if (token.equals(RESPONSESTR)) {
@@ -113,6 +119,6 @@ public class BankMsgTextCoder implements BankMsgCoder {
   		} catch (IOException ioe) {
   			throw new IOException("Parse error...");
   		}  		
-  		return new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, username, password, balance, transactionAmount);
+  		return new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, username, password, balance, transactionAmount);
   	}
 }

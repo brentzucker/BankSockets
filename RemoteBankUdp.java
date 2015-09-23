@@ -22,6 +22,7 @@ public class RemoteBankUdp {
 		String challenge, md5, username, password, transaction;
 		Double transactionAmount, balance;
 		boolean isResponse, isAuthentication, isAuthenticated, isDeposit;
+		int sequenceNumber;
 
 		/* Parse Command Line arguments */
 
@@ -54,7 +55,8 @@ public class RemoteBankUdp {
 		isAuthentication = true;
 		isAuthenticated = false;
 		isDeposit = transaction.equals("deposit");
-	    BankMsg msg = new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, "challengeRequest", "challengeRequest", 0.0, 0.0);
+		sequenceNumber = 1;
+	    BankMsg msg = new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, "challengeRequest", "challengeRequest", 0.0, 0.0);
 
 	    // Send authentication Request message and receive challenge
 	    Debugger.log("Sending Authentication Request to the Server " + args[0]);
@@ -66,7 +68,8 @@ public class RemoteBankUdp {
 
 	    // Send username & MD5 hash and Receive Balance & Authentication
 	    Debugger.log("Sending Username " + username + " and hash " + md5 + " to the Server ");
-	    msg = new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, username, md5, 0.0, 0.0);
+	    sequenceNumber = 2;
+	    msg = new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, username, md5, 0.0, 0.0);
 	    msg = sendAndReceive(msg);
 
 	    /* Complete Transaction */
@@ -84,7 +87,8 @@ public class RemoteBankUdp {
 	    	isAuthentication = false; // This message is not seeking authentication
 
 			// Send Transaction Message, Receive new balance
-			msg = new BankMsg(isResponse, isAuthentication, isAuthenticated, isDeposit, username, password, balance, transactionAmount);
+			sequenceNumber = 3;
+			msg = new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, username, password, balance, transactionAmount);
 		    msg = sendAndReceive(msg);
 		    
 		    Debugger.log(msg);
