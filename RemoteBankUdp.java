@@ -16,6 +16,7 @@ public class RemoteBankUdp {
 
 		Scanner scan = new Scanner(System.in);
 
+		BankMsg msgToSend, msgReceieved;
 		InetAddress destAddr;
 		int destPort;
 
@@ -56,12 +57,14 @@ public class RemoteBankUdp {
 		isAuthenticated = false;
 		isDeposit = transaction.equals("deposit");
 		sequenceNumber = 1;
-	    BankMsg msg = new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, "challengeRequest", "challengeRequest", 0.0, 0.0);
+	    msgToSend = new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, "challengeRequest", "challengeRequest", 0.0, 0.0);
 
 	    // Send authentication Request message and receive challenge
 	    Debugger.log("Sending Authentication Request to the Server " + args[0]);
-	    msg = sendAndReceive(msg);
-	    challenge = msg.getPassword();
+	    while ((msgReceieved = sendAndReceive(msgToSend)).getSequenceNumber() != sequenceNumber) { // If timeout or the Sequence Number is not what is expected then resend
+	    	Debugger.log("Retransmitting Request after timeout");
+	    }
+	    challenge = msgReceieved.getPassword();
 
 	    // Compute MD5 hash, hash = MD5(username, password, challenge)
 	    md5 = MD5Hash.computeMD5(username + password + challenge);
@@ -69,18 +72,20 @@ public class RemoteBankUdp {
 	    // Send username & MD5 hash and Receive Balance & Authentication
 	    Debugger.log("Sending Username " + username + " and hash " + md5 + " to the Server ");
 	    sequenceNumber = 2;
-	    msg = new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, username, md5, 0.0, 0.0);
-	    msg = sendAndReceive(msg);
+	    msgToSend = new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, username, md5, 0.0, 0.0);
+	   	while ((msgReceieved = sendAndReceive(msgToSend)).getSequenceNumber() != sequenceNumber) { // If timeout or the Sequence Number is not what is expected then resend
+	    	Debugger.log("Retransmitting Request after timeout");
+	    }
 
 	    /* Complete Transaction */
 
 	    // If the user is authenticated complete the transaction
-	    if (msg.isAuthenticated()) {
+	    if (msgReceieved.isAuthenticated()) {
 
 	    	System.out.println("Welcome " + username +".");
 
 	    	// Extract balance from msg
-	    	balance = msg.getBalance();
+	    	balance = msgReceieved.getBalance();
 
 	    	// Username/Password accepted - Mark Authenticated Flag as True
 	    	isAuthenticated = true;
@@ -88,21 +93,23 @@ public class RemoteBankUdp {
 
 			// Send Transaction Message, Receive new balance
 			sequenceNumber = 3;
-			msg = new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, username, password, balance, transactionAmount);
-		    msg = sendAndReceive(msg);
+			msgToSend = new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, username, password, balance, transactionAmount);
+    	    while ((msgReceieved = sendAndReceive(msgToSend)).getSequenceNumber() != sequenceNumber) { // If timeout or the Sequence Number is not what is expected then resend
+		    	Debugger.log("Retransmitting Request after timeout");
+		    }
 		    
-		    Debugger.log(msg);
+		    Debugger.log(msgReceieved);
 
-		    if (msg.getTransactionAmount() > -1) { // If the transaction amount was valid it will not be -1
+		    if (msgReceieved.getTransactionAmount() > -1) { // If the transaction amount was valid it will not be -1
 		    	
 		    	System.out.println("Your " + transaction + " of " 
-		    					+ msg.getTransactionAmount() + " is successfully recorded.");
-		    	System.out.println("Your new account balance is " + msg.getBalance());
+		    					+ msgReceieved.getTransactionAmount() + " is successfully recorded.");
+		    	System.out.println("Your new account balance is " + msgReceieved.getBalance());
 		    	System.out.println("Thank you for banking with us");
 		    }
 		    else {
 		    	System.out.println("Invalid transaction.");
-		    	System.out.println("Your account balance is " + msg.getBalance());
+		    	System.out.println("Your account balance is " + msgReceieved.getBalance());
 		    }
 	    } else {
 	    	System.out.println("User authorization failed for Username: " + username);
@@ -139,7 +146,6 @@ public class RemoteBankUdp {
 		byte[] encodedAuth = coder.toWire(msg);
 
 		Debugger.log("Sending Text-Encoded Request (" + encodedAuth.length + " bytes): ");
-		Debugger.log(encodedAuth);
 
 		// Encapsulate bin within DatagramPacket and Send
 		DatagramPacket message = new DatagramPacket(encodedAuth, encodedAuth.length);
