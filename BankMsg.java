@@ -9,7 +9,6 @@ public class BankMsg
 	private boolean isTimedout; // False if not timed out
 	private boolean isResponse; // true if response from server
 	private boolean isAuthentication; // true if loggin in, false if transaction
-	private boolean isAuthenticated; // true if username/login exists
 	private boolean isDeposit; // true if deposit; false if withdrawl
 	private String username; // length restriction
 	private String password; // Stores Challenge and Hashed Response
@@ -17,7 +16,7 @@ public class BankMsg
 	private Double transactionAmount;
 	private int sequenceNumber;
 
-	public BankMsg(boolean isResponse, int sequenceNumber, boolean isAuthentication, boolean isAuthenticated, boolean isDeposit, String username, String password, Double balance, Double transactionAmount) throws IllegalArgumentException {
+	public BankMsg(boolean isResponse, int sequenceNumber, boolean isAuthentication, boolean isDeposit, String username, String password, Double balance, Double transactionAmount) throws IllegalArgumentException {
 		
 		// Check invariants
 		if (balance > -1.0) { // Check if account exists
@@ -33,7 +32,6 @@ public class BankMsg
 		this.isResponse = isResponse;
 		this.sequenceNumber = sequenceNumber;
 		this.isAuthentication = isAuthentication;
-		this.isAuthenticated = isAuthenticated;
 		this.isDeposit = isDeposit;
 		this.username = username;
 		this.password = password;
@@ -47,10 +45,6 @@ public class BankMsg
 
 	public void setIsAuthentication(boolean isAuthentication) {
 	    this.isAuthentication = isAuthentication;
-	}
-
-	public void setAuthenticated(boolean isAuthenticated) {
-	    this.isAuthenticated = isAuthenticated;
 	}
 
 	public void setResponse(boolean isResponse) {
@@ -80,10 +74,6 @@ public class BankMsg
 	public boolean isAuthentication() {
 	    return this.isAuthentication;
 	} 
-
-	public boolean isAuthenticated() {
-	    return this.isAuthenticated;
-	}
 
 	public boolean isResponse() {
 	    return this.isResponse;

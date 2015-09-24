@@ -7,20 +7,18 @@ public class RemoteBank {
 		// Create Authentication Request message
 		Boolean isResponse = false;
 		Boolean isAuthentication = true;
-		Boolean isAuthenticated = false;
 		Boolean isDeposit = false;
 		int sequenceNumber = 1;
-	    return new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, "challengeRequest", "challengeRequest", 0.0, 0.0);
+	    return new BankMsg(isResponse, sequenceNumber, isAuthentication, isDeposit, "challengeRequest", "challengeRequest", 0.0, 0.0);
 	}
 
 	public static BankMsg getUsernameAndHashMsg(String username, String md5) {
 		
 		Boolean isResponse = false;
 		Boolean isAuthentication = true;
-		Boolean isAuthenticated = false;
 		Boolean isDeposit = false;
 		int sequenceNumber = 2;
-	    return new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, username, md5, 0.0, 0.0);
+	    return new BankMsg(isResponse, sequenceNumber, isAuthentication, isDeposit, username, md5, 0.0, 0.0);
 	}
 
 	public static BankMsg getTransactionRequestMsg(String username, Double balance, String transactionType, Double transactionAmount) {
@@ -28,11 +26,10 @@ public class RemoteBank {
 		Boolean isResponse = false;
 
 		// Username/Password accepted - Mark Authenticated Flag as True
-	    Boolean isAuthenticated = true;
 	    Boolean isAuthentication = false; // This message is not seeking authentication
 	    Boolean isDeposit = transactionType.equals("deposit");
 	    int sequenceNumber = 3;
-	    return new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, username, "password", balance, transactionAmount);
+	    return new BankMsg(isResponse, sequenceNumber, isAuthentication, isDeposit, username, "password", balance, transactionAmount);
 	}
 
 	public static void printTransactionResults(BankMsg msgReceieved) {

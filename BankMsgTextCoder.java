@@ -45,7 +45,7 @@ public class BankMsgTextCoder implements BankMsgCoder {
   		Scanner scan = new Scanner(new InputStreamReader(msgStream, CHARSETNAME));
 
   		// BankMsg Properties
-  		boolean isResponse, isAuthenticated = false, isAuthentication = false, isDeposit = false;
+  		boolean isResponse, isAuthentication = false, isDeposit = false;
   		String username, password = "";
   		Double balance, transactionAmount = 0.0;
   		int sequenceNumber;
@@ -106,6 +106,6 @@ public class BankMsgTextCoder implements BankMsgCoder {
   		} catch (IOException ioe) {
   			throw new IOException("Parse error...");
   		}  		
-  		return new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, username, password, balance, transactionAmount);
+  		return new BankMsg(isResponse, sequenceNumber, isAuthentication, isDeposit, username, password, balance, transactionAmount);
   	}
 }
