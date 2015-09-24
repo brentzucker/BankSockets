@@ -9,13 +9,12 @@ import java.util.Scanner;
 
 public class BankMsgTextCoder implements BankMsgCoder {
 	/*
-	 * Wire Format "BANKPROTO" [<RESPFLAG>] [<AUTHENTICATED>] <"a" | <"d" | "w">> <USERNAME> [<CHALLENGE/PASSWORDHASH>] <BALANCE> [<TRANSAMT>]
+	 * Wire Format "BANKPROTO" [<RESPFLAG>] <"a" | <"d" | "w">> <USERNAME> [<CHALLENGE/PASSWORDHASH>] <BALANCE> [<TRANSAMT>]
 	 * Charset is fixed by the wire format.
 	 */
 
 	// Manifest constants for encoding
 	public static final String MAGIC = "Bankin";
-	public static final String AUTHENTICATED = "AUTH";
 	public static final String AUTHSTR = "a";
 	public static final String DEPOSITSTR = "d";
 	public static final String WITHDRAWSTR = "w";
@@ -29,7 +28,6 @@ public class BankMsgTextCoder implements BankMsgCoder {
   		String msgString = MAGIC + DELIMSTR 
   				+ msg.getSequenceNumber() + DELIMSTR
   				+ (msg.isResponse() ? RESPONSESTR + DELIMSTR : "")
-  				+ (msg.isAuthenticated() ? AUTHENTICATED + DELIMSTR : "")
   				+ (msg.isAuthentication() ? AUTHSTR : (msg.isDeposit() ? DEPOSITSTR : WITHDRAWSTR))
   				+ DELIMSTR + msg.getUsername() + DELIMSTR
   				+ (msg.isAuthentication() ? msg.getPassword() + DELIMSTR : "")
@@ -72,14 +70,6 @@ public class BankMsgTextCoder implements BankMsgCoder {
   			} else {
   				isResponse = false;
   			}
-  			
-  			if (token.equals(AUTHENTICATED)) { // If already been authenticated, let the transaction continue
-	  			
-	  			isAuthenticated = true;
-	  			token = scan.next();
-	  		} else {
-	  			isAuthenticated = false;
-	  		}
 
 			if (token.equals(AUTHSTR)) {
   				isAuthentication = true;
@@ -109,7 +99,7 @@ public class BankMsgTextCoder implements BankMsgCoder {
   			balance = Double.parseDouble(token);
 
   			// If not response and balance will be correct after transaction, commit transaction
-  			if (isAuthenticated && !isAuthentication) {
+  			if (!isAuthentication) {
   				token = scan.next();
   				transactionAmount = Double.parseDouble(token);
   			}
