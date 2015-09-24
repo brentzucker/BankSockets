@@ -22,7 +22,7 @@ public class RemoteBankUdp {
 
 		String challenge, md5, username, password, transaction;
 		Double transactionAmount, balance;
-		boolean isResponse, isAuthentication, isAuthenticated, isDeposit, isDebuggingMode;
+		boolean isDebuggingMode;
 		int sequenceNumber;
 
 		/* Parse Command Line arguments */
@@ -48,23 +48,17 @@ public class RemoteBankUdp {
 	    sock = new DatagramSocket();
 	    sock.connect(destAddr, destPort);
 
-	    // Create Authentication Request message
-		isResponse = false;
-		isAuthentication = true;
-		isAuthenticated = false;
-		isDeposit = transaction.equals("deposit");
+	    // Create Request to Connect Message - Essentially Requesting a challenge
 		sequenceNumber = 1;
-	    msgToSend = RemoteBank.getAuthenticationRequestMsg();
+	    msgToSend = RemoteBank.getRequestToConnectMsg();
 
-	    // Send authentication Request message and receive challenge
+	    // Send connection Request message and receive challenge
 	    Debugger.log("Sending Authentication Request to the Server " + args[0]);
 	    while ((msgReceieved = sendAndReceive(msgToSend)).isTimedout() || msgReceieved.getSequenceNumber() != sequenceNumber) { // If timeout or the Sequence Number is not what is expected then resend
 	    	Debugger.log("Retransmitting Request after timeout");
 	    }
 	    challenge = msgReceieved.getPassword();
-
-	    // Compute MD5 hash, hash = MD5(username, password, challenge)
-	    md5 = MD5Hash.computeMD5(username + password + challenge);
+	    md5 = MD5Hash.computeMD5(username + password + challenge); // Compute MD5 hash, hash = MD5(username, password, challenge)
 
 	    // Send username & MD5 hash and Receive Balance & Authentication
 	    Debugger.log("Sending Username " + username + " and hash " + md5 + " to the Server ");
@@ -75,40 +69,25 @@ public class RemoteBankUdp {
 	    }
 
 	    /* Complete Transaction */
-
-	    // If the user is authenticated complete the transaction
-	    if (msgReceieved.isAuthenticated()) {
+	    
+	    if (msgReceieved.isAuthenticated()) { // If the user is authenticated complete the transaction
 
 	    	System.out.println("Welcome " + username +".");
 
 	    	// Extract balance from msg
 	    	balance = msgReceieved.getBalance();
 
-	    	// Username/Password accepted - Mark Authenticated Flag as True
-	    	isAuthenticated = true;
-	    	isAuthentication = false; // This message is not seeking authentication
-
 			// Send Transaction Message, Receive new balance
 			Debugger.log("Authentication complete. Sending " + transaction + " request of " + transactionAmount + " to server");
 			sequenceNumber = 3;
-			msgToSend = new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, username, password, balance, transactionAmount);
+    	    msgToSend = RemoteBank.getTransactionRequestMsg(username, balance, transaction, transactionAmount);
     	    while ((msgReceieved = sendAndReceive(msgToSend)).isTimedout() || msgReceieved.getSequenceNumber() != sequenceNumber) { // If timeout or the Sequence Number is not what is expected then resend
 		    	Debugger.log("Retransmitting Request after timeout");
 		    }
 		    
 		    Debugger.log(msgReceieved);
 
-		    if (msgReceieved.getTransactionAmount() > -1) { // If the transaction amount was valid it will not be -1
-		    	
-		    	System.out.println("Your " + transaction + " of " 
-		    					+ msgReceieved.getTransactionAmount() + " is successfully recorded.");
-		    	System.out.println("Your new account balance is " + msgReceieved.getBalance());
-		    	System.out.println("Thank you for banking with us");
-		    }
-		    else {
-		    	System.out.println("Invalid transaction.");
-		    	System.out.println("Your account balance is " + msgReceieved.getBalance());
-		    }
+		    RemoteBank.printTransactionResults(msgReceieved);
 	    } else {
 	    	System.out.println("User authorization failed for Username: " + username);
 	    }

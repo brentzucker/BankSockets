@@ -2,7 +2,8 @@
 
 public class RemoteBank {
 
-	public static BankMsg getAuthenticationRequestMsg() {
+	public static BankMsg getRequestToConnectMsg() {
+		
 		// Create Authentication Request message
 		Boolean isResponse = false;
 		Boolean isAuthentication = true;
@@ -13,12 +14,41 @@ public class RemoteBank {
 	}
 
 	public static BankMsg getUsernameAndHashMsg(String username, String md5) {
+		
 		Boolean isResponse = false;
 		Boolean isAuthentication = true;
 		Boolean isAuthenticated = false;
 		Boolean isDeposit = false;
 		int sequenceNumber = 2;
 	    return new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, username, md5, 0.0, 0.0);
+	}
+
+	public static BankMsg getTransactionRequestMsg(String username, Double balance, String transactionType, Double transactionAmount) {
+		
+		Boolean isResponse = false;
+
+		// Username/Password accepted - Mark Authenticated Flag as True
+	    Boolean isAuthenticated = true;
+	    Boolean isAuthentication = false; // This message is not seeking authentication
+	    Boolean isDeposit = transactionType.equals("deposit");
+	    int sequenceNumber = 3;
+	    return new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, username, "password", balance, transactionAmount);
+	}
+
+	public static void printTransactionResults(BankMsg msgReceieved) {
+
+		String transaction = msgReceieved.isDeposit() ? "deposit" : "withdraw";
+		if (msgReceieved.getTransactionAmount() > -1) { // If the transaction amount was valid it will not be -1
+	    	
+	    	System.out.println("Your " + transaction + " of " 
+	    					+ msgReceieved.getTransactionAmount() + " is successfully recorded.");
+	    	System.out.println("Your new account balance is " + msgReceieved.getBalance());
+	    	System.out.println("Thank you for banking with us");
+	    }
+	    else {
+	    	System.out.println("Invalid transaction.");
+	    	System.out.println("Your account balance is " + msgReceieved.getBalance());
+	    }
 	}
 
 	public static void throwIllegalArgumentException(String[] args) {
