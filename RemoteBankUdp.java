@@ -14,36 +14,34 @@ public class RemoteBankUdp {
 	public static DatagramSocket sock;
 
 	public static void main(String[] args) throws IOException, NoSuchAlgorithmException, UnsupportedEncodingException {
-		
+
 		BankMsg msgToSend, msgReceieved;
+		String[] ipPort;
 		InetAddress destAddr;
 		int destPort;
 
 		String challenge, md5, username, password, transaction;
 		Double transactionAmount, balance;
-		boolean isResponse, isAuthentication, isAuthenticated, isDeposit;
+		boolean isResponse, isAuthentication, isAuthenticated, isDeposit, isDebuggingMode;
 		int sequenceNumber;
 
 		/* Parse Command Line arguments */
 
-		throwIllegalArgumentException(args);
+		RemoteBank.throwIllegalArgumentException(args);
 
-		// Array that is expected to hold the ipaddress [0] and the port number [1]
-	    String[] ipPort = args[0].split(":");
+		/* Store Command line arguments */
 
+	    ipPort = args[0].split(":"); // Array that is expected to hold the ipaddress [0] and the port number [1]
 	   	destAddr = InetAddress.getByName(args[0].split(":")[0]); // Destination Address
 	   	destPort = Integer.parseInt(args[0].split(":")[1]); // Destination port
-
 	    username = args[1];
 	    password = args[2];
 	    transaction = args[3];
 	    transactionAmount = Double.parseDouble(args[4]);
 		
 	    // Check for debugging flag
-	    if (args.length == 6 && args[5].equals("-d")) {
-	    	// Consume -d for debugger
-	    	Debugger.setEnabled(true);
-	    }
+	    isDebuggingMode = RemoteBank.isDebuggingMode(args);
+	    Debugger.setEnabled(isDebuggingMode);
 	    
 	    /* Begin Authentication */
 
@@ -56,7 +54,7 @@ public class RemoteBankUdp {
 		isAuthenticated = false;
 		isDeposit = transaction.equals("deposit");
 		sequenceNumber = 1;
-	    msgToSend = new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, "challengeRequest", "challengeRequest", 0.0, 0.0);
+	    msgToSend = RemoteBank.getAuthenticationRequestMsg();
 
 	    // Send authentication Request message and receive challenge
 	    Debugger.log("Sending Authentication Request to the Server " + args[0]);
@@ -71,7 +69,7 @@ public class RemoteBankUdp {
 	    // Send username & MD5 hash and Receive Balance & Authentication
 	    Debugger.log("Sending Username " + username + " and hash " + md5 + " to the Server ");
 	    sequenceNumber = 2;
-	    msgToSend = new BankMsg(isResponse, sequenceNumber, isAuthentication, isAuthenticated, isDeposit, username, md5, 0.0, 0.0);
+	   	msgToSend = RemoteBank.getUsernameAndHashMsg(username, md5);
 	   	while ((msgReceieved = sendAndReceive(msgToSend)).isTimedout() || msgReceieved.getSequenceNumber() != sequenceNumber) { // If timeout or the Sequence Number is not what is expected then resend
 	    	Debugger.log("Retransmitting Request after timeout: 1000ms");
 	    }
@@ -116,29 +114,6 @@ public class RemoteBankUdp {
 	    }
 	}
 
-	public static void throwIllegalArgumentException(String[] args) {
-
-	    if (args.length != 5 && args.length != 6) {
-	    	throw new IllegalArgumentException("Parameter(s): <ip-address:port> <\"username\">"
-	    									+ "<\"password\"> <deposit/withdraw> <amount>");
-	    }
-	    // Check if ip & port were entered properly
-	    if (args[0].split(":").length != 2) {
-	    	throw new IllegalArgumentException("Parameter(s): <ip-address:port> <\"username\">"
-	    									+ "<\"password\"> <deposit/withdraw> <amount>");
-	    }
-	    // Check if transaction is deposit or withdraw
-	    if (!args[3].equals("deposit") && !args[3].equals("withdraw")) {
-	    	throw new IllegalArgumentException("Parameter(s): <ip-address:port> <\"username\">"
-	    									+ "<\"password\"> <deposit/withdraw> <amount>");
-	    }
-	    // Check if TransactionAmount is a Number
-	    if (isNotNumber(args[4])) {
-	    	throw new IllegalArgumentException("Parameter(s): <ip-address:port> <\"username\">"
-	    									+ "<\"password\"> <deposit/withdraw> <amount>");
-	    }
-	}
-
 	public static BankMsg sendAndReceive(BankMsg msg) throws IOException {
 		
 		boolean received = false;
@@ -178,14 +153,5 @@ public class RemoteBankUdp {
 	    msg = coder.fromWire(encodedAuth);
 
 	    return msg;
-	}
-
-	public static boolean isNotNumber(String s) {
-		try {
-			Double.parseDouble(s);
-			return false;
-		} catch (NumberFormatException n) {
-			return true;
-		}
 	}
 }
