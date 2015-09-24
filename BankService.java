@@ -1,4 +1,6 @@
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.io.File;
@@ -14,6 +16,9 @@ public class BankService {
 
 	// Map of SocketAddresses, challenges, and Message Counts
 	private Map<String, SourceAddress> sourceAddresses = new HashMap<String, SourceAddress>();
+
+	// List of Authenticated Users (sourceIP + ":" + Port + User)
+	private List<String> authenticatedUsers = new ArrayList<String>();
 
 	// Load Bank Accounts
 	public void loadBankAccounts() throws FileNotFoundException {
@@ -60,7 +65,7 @@ public class BankService {
 
 		/* Complete Transaction */ 
 
-		else if (msg.isAuthenticated()) { // The Authentication is complete. Check if the User is Authenticated, then complete transaction
+		else if (authenticatedUsers.contains(socketAddress + ":" + port + msg.getUsername())) { // Check if the User is Authenticated, then complete transaction
 			msg = handleTransaction(msg);
 		}
 
@@ -89,7 +94,8 @@ public class BankService {
 
 		BankAccount bankAccount;
 		String username = msg.getUsername(),
-			   source = socketAddress + ":" + port;
+			   source = socketAddress + ":" + port,
+			   ipPortUser = source + username;
 		Double balance = -1.0;
 		
 		if (!(msg.getPassword().equals("challengeRequest"))) {
@@ -102,10 +108,12 @@ public class BankService {
 
 				// Compare Clients Hash to Servers Hash
 				if (msg.getPassword().equals(md5)) {
+
+					// Add user to Authenticated Users List
+					authenticatedUsers.add(ipPortUser);
 					
 					// User is authenticated, return balance
 					balance = bankAccount.getBalance();
-					msg.setAuthenticated(true);
 					msg.setBalance(balance);
 					Debugger.log("Sending success message to client");
 				} else {
@@ -114,6 +122,7 @@ public class BankService {
 				}
 			} else {
 				Debugger.log("Username not present");
+				msg.setBalance(balance);
 			}
 		}
 		return msg;

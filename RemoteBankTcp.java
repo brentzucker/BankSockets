@@ -56,7 +56,7 @@ public class RemoteBankTcp {
 
 	    /* Complete Transaction */
 
-	    if (msgReceieved.isAuthenticated()) { // If the user is authenticated complete the transaction
+	    if (msgReceieved.getBalance() > -1) { // If the user has an account balance they are authenticated.
 
 	    	System.out.println("Welcome " + username +".");
 

@@ -9,7 +9,7 @@ import java.util.Scanner;
 
 public class BankMsgTextCoder implements BankMsgCoder {
 	/*
-	 * Wire Format "BANKPROTO" [<RESPFLAG>] [<AUTH>] <"a" | <"d" | "w">> <USERNAME> [<PASSWORD or CHALLENGE>] <BALANCE> [<TRANSAMT>]
+	 * Wire Format "BANKPROTO" [<RESPFLAG>] [<AUTHENTICATED>] <"a" | <"d" | "w">> <USERNAME> [<CHALLENGE/PASSWORDHASH>] <BALANCE> [<TRANSAMT>]
 	 * Charset is fixed by the wire format.
 	 */
 
