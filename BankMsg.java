@@ -1,8 +1,3 @@
-/* TODO
- * 
- * Could possibly use (-) to withdraw and (+) to deposit
- */
-
 // Protocol
 public class BankMsg 
 {

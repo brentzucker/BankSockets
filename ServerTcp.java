@@ -6,12 +6,12 @@ public class ServerTcp {
 
 	public static void main(String[] args) throws Exception {
 
-		if (args.length != 1) { // Test for correct # of args
+		if (args.length != 1 && args.length !=2) { // Test for correct # of args
 	      throw new IllegalArgumentException("Parameter(s): <Port>");
 	    }
 
-	    // Consume -d for debugger
-	    Debugger.setEnabled(true);
+	    if (args.length == 2 && args[1].equals("-d"))// Consume -d for debugger
+	    	Debugger.setEnabled(true);
 
 	    int port = Integer.parseInt(args[0]); // Receiving Port
 	    ServerSocket servSock = new ServerSocket(port);
@@ -40,7 +40,7 @@ public class ServerTcp {
       		} catch (IOException ioe) {
       			System.err.println("Error handling client: " + ioe.getMessage());
       		} finally {
-      			System.out.println("Closing connection");
+      			Debugger.log("Closing connection");
       			clntSock.close();
       		}
 		}

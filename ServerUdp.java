@@ -8,14 +8,14 @@ public class ServerUdp {
 
 	public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
 
-		if (args.length != 1) {
+		if (args.length != 1 && args.length !=2) {
 			throw new IllegalArgumentException("Parameter(s): <Port>");
 		}
 
-		int port = Integer.parseInt(args[0]);
+		if (args.length == 2 && args[1].equals("-d"))// Consume -d for debugger
+	    	Debugger.setEnabled(true);
 
-		// Consume -d for debugger
-	    Debugger.setEnabled(true);
+		int port = Integer.parseInt(args[0]);
 
 		DatagramSocket sock = new DatagramSocket(port);
 

@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Scanner;
 import java.io.File;
 import java.io.FileNotFoundException;
-
+import java.util.concurrent.ThreadLocalRandom;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 
@@ -81,7 +81,7 @@ public class BankService {
 			// Generate Challenge
 			for (int i = 0; i < 64; i++) {
 				// Random character based off time
-				challenge += (char)((System.currentTimeMillis() % 89) + 33);
+				challenge += (char)(ThreadLocalRandom.current().nextInt(0, 89) + 33); // http://stackoverflow.com/a/363692
 			}
 			sourceAddresses.put(source, new SourceAddress(socketAddress, port, challenge));
 			msg.setPassword(challenge);
