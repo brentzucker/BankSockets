@@ -89,13 +89,12 @@ public class BankMsgTextCoder implements BankMsgCoder {
   			username = token;
   			token = scan.next();
 
-  			// If auth check password
   			if (isAuthentication) {
   				password = token;
   				token = scan.next();
   			}
 
-  			// If response store balance if correct
+  			// Current token is a value for balance
   			balance = Double.parseDouble(token);
 
   			// If not response and balance will be correct after transaction, commit transaction

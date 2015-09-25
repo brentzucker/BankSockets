@@ -50,12 +50,14 @@ public class RemoteBank {
 
 	public static void throwIllegalArgumentException(String[] args) {
 
+		String[] ipPort = args[0].split(":");
+
 	    if (args.length != 5 && args.length != 6) {
 	    	throw new IllegalArgumentException("Parameter(s): <ip-address:port> <\"username\">"
 	    									+ "<\"password\"> <deposit/withdraw> <amount>");
 	    }
 	    // Check if ip & port were entered properly
-	    if (args[0].split(":").length != 2) {
+	    if (ipPort.length != 2 || !validIP(ipPort[0]) || !validPort(ipPort[1])) {
 	    	throw new IllegalArgumentException("Parameter(s): <ip-address:port> <\"username\">"
 	    									+ "<\"password\"> <deposit/withdraw> <amount>");
 	    }
@@ -70,6 +72,40 @@ public class RemoteBank {
 	    									+ "<\"password\"> <deposit/withdraw> <amount>");
 	    }
 	}
+
+	// http://stackoverflow.com/a/5240291
+	public static boolean validIP(String ip) {
+		if (ip.equals("localhost")) return true;
+	    try {
+	        if ( ip == null || ip.isEmpty() ) {
+	            return false;
+	        }
+
+	        String[] parts = ip.split( "\\." );
+	        if ( parts.length != 4 ) {
+	            return false;
+	        }
+
+	        for ( String s : parts ) {
+	            int i = Integer.parseInt( s );
+	            if ( (i < 0) || (i > 255) ) {
+	                return false;
+	            }
+	        }
+	        if ( ip.endsWith(".") ) {
+	            return false;
+	        }
+
+	        return true;
+	    } catch (NumberFormatException nfe) {
+	        return false;
+	    }
+	}
+
+	public static boolean validPort(String port) {
+		
+		return !isNotNumber(port) && (Integer.parseInt(port) > 0 && Integer.parseInt(port) < 65536);
+	} 
 
 	public static boolean isNotNumber(String s) {
 		try {

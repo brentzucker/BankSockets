@@ -25,8 +25,8 @@ public class RemoteBankTcp {
 		/* Store Command line arguments */
 
 	    ipPort = args[0].split(":"); // Array that is expected to hold the ipaddress [0] and the port number [1]
-	   	destAddr = InetAddress.getByName(args[0].split(":")[0]); // Destination Address
-	   	destPort = Integer.parseInt(args[0].split(":")[1]); // Destination port
+	   	destAddr = InetAddress.getByName(ipPort[0]); // Destination Address
+	   	destPort = Integer.parseInt(ipPort[1]); // Destination port
 	    username = args[1];
 	    password = args[2];
 	    transaction = args[3];
